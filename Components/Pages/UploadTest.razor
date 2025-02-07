@@ -1,0 +1,68 @@
+@page "/upload-test"
+@inject MinioService MinioService
+@rendermode InteractiveServer
+
+<h3>Image Upload (Simplified)</h3>
+
+<InputFile OnChange="@HandleImageSelected" accept="image/*" id="fileInput" /> @* Add an ID *@
+
+<button @onclick="HandleImageUpload" disabled="@(_file == null || _uploading)">
+    @if (_uploading)
+    {
+            <span>Uploading...</span>
+    }
+    else
+    {
+            <span>Upload</span>
+    }
+</button>
+
+@if (_imageUrl != null)
+{
+        <p>Image URL: @_imageUrl</p>
+        <img src="@_imageUrl" alt="Uploaded Image" style="max-width: 300px;" />
+}
+
+@if (_errorMessage != null)
+{
+        <p style="color: red;">Error: @_errorMessage</p>
+}
+
+@code {
+    private IBrowserFile? _file;
+    private string? _imageUrl;
+    private string? _errorMessage;
+    private bool _uploading;
+
+    private async Task HandleImageSelected(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+        _imageUrl = null;
+        _errorMessage = null;
+
+        await InvokeAsync(StateHasChanged); // Force re-render - THIS IS KEY
+    }
+
+    private async Task HandleImageUpload()
+    {
+        if (_file == null) return;
+
+        _uploading = true;
+        _errorMessage = null;
+
+        try
+        {
+            using var stream = _file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            _imageUrl = await MinioService.UploadImageAsync(stream, _file.Name, _file.ContentType);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+            Console.Error.WriteLine(ex);
+        }
+        finally
+        {
+            _uploading = false;
+        }
+    }
+}
