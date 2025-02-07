@@ -10,8 +10,8 @@ public class Response
     public int FormId { get; set; }
     public Form? Form { get; set; }
 
-    public string? UserId { get; set; }  // User who answered
-    public ApplicationUser? User { get; set; }
+    public string? AuthorId { get; set; }  // User who answered
+    public ApplicationUser? Author { get; set; }
 
     public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
 

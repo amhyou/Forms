@@ -20,8 +20,8 @@ public class Form
     [MaxLength(255)]
     public string? ImageUrl { get; set; }
 
-    public string? AuthorId { get; set; }
-    public ApplicationUser? Author { get; set; }
+    public string? CreatorId { get; set; }
+    public ApplicationUser? Creator { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

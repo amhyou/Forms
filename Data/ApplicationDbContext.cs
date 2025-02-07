@@ -76,9 +76,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
               .HasForeignKey(r => r.FormId)
               .IsRequired();
 
-            response.HasOne(r => r.User)
+            response.HasOne(r => r.Author)
               .WithMany()
-              .HasForeignKey(r => r.UserId)
+              .HasForeignKey(r => r.AuthorId)
               .IsRequired();
         });
 
@@ -112,9 +112,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<Form>(form =>
         {
-            form.HasOne(f => f.Author)
+            form.HasOne(f => f.Creator)
               .WithMany()
-              .HasForeignKey(f => f.AuthorId)
+              .HasForeignKey(f => f.CreatorId)
               .IsRequired();
 
             form.HasOne(f => f.Topic)
