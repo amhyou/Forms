@@ -7,122 +7,123 @@ namespace forms.Data;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
 
-    public DbSet<Form> Forms { get; set; }
-    public DbSet<Topic> Topics { get; set; }
-    public DbSet<AllowedUser> AllowedUsers { get; set; }
-    public DbSet<Comment> Comments { get; set; }
-    public DbSet<Question> Questions { get; set; }
-    public DbSet<QuestionOption> QuestionOptions { get; set; }
-    public DbSet<Response> Responses { get; set; }
-    public DbSet<ResponseAnswer> ResponseAnswers { get; set; }
-    public DbSet<Tag> Tags { get; set; }
-    public DbSet<FormTag> FormTags { get; set; }
+  public DbSet<Template> Templates { get; set; }
+  public DbSet<Topic> Topics { get; set; }
+  public DbSet<AllowedUser> AllowedUsers { get; set; }
+  public DbSet<Comment> Comments { get; set; }
+  public DbSet<Question> Questions { get; set; }
+  public DbSet<QuestionOption> QuestionOptions { get; set; }
+  public DbSet<Form> Forms { get; set; }
+  public DbSet<Response> Responses { get; set; }
+  public DbSet<Tag> Tags { get; set; }
+  public DbSet<TemplateTag> TemplateTags { get; set; }
 
 
-    protected override void OnModelCreating(ModelBuilder builder)
+  protected override void OnModelCreating(ModelBuilder builder)
+  {
+    base.OnModelCreating(builder);
+
+    // AllowedUser (Many-to-Many with Template and ApplicationUser)
+    builder.Entity<AllowedUser>(allowedUser =>
     {
-        base.OnModelCreating(builder);
+      allowedUser.HasKey(au => new { au.TemplateId, au.UserId });
 
-        // AllowedUser (Many-to-Many with Form and ApplicationUser)
-        builder.Entity<AllowedUser>(allowedUser =>
-        {
-            allowedUser.HasKey(au => new { au.FormId, au.UserId });
+      allowedUser.HasOne(au => au.Template)
+            .WithMany(f => f.AllowedUsers)
+            .HasForeignKey(au => au.TemplateId)
+            .IsRequired();
+    });
 
-            allowedUser.HasOne(au => au.Form)
-              .WithMany(f => f.AllowedUsers)
-              .HasForeignKey(au => au.FormId)
-              .IsRequired();
-        });
+    // TemplateTag (Many-to-Many with Template and Tag)
+    builder.Entity<TemplateTag>(templateTag =>
+    {
+      templateTag.HasKey(ft => new { ft.TemplateId, ft.TagId });
 
-        // FormTag (Many-to-Many with Form and Tag)
-        builder.Entity<FormTag>(formTag =>
-        {
-            formTag.HasKey(ft => new { ft.FormId, ft.TagId });
+      templateTag.HasOne(ft => ft.Template)
+            .WithMany(f => f.FormTags)
+            .HasForeignKey(ft => ft.TemplateId)
+            .IsRequired();
 
-            formTag.HasOne(ft => ft.Form)
-              .WithMany(f => f.FormTags)
-              .HasForeignKey(ft => ft.FormId)
-              .IsRequired();
+      templateTag.HasOne(ft => ft.Tag)
+            .WithMany(t => t.TemplateTags)
+            .HasForeignKey(ft => ft.TagId)
+            .IsRequired();
+    });
 
-            formTag.HasOne(ft => ft.Tag)
-              .WithMany(t => t.FormTags)
-              .HasForeignKey(ft => ft.TagId)
-              .IsRequired();
-        });
+    // Question (One-to-Many with Template)
+    builder.Entity<Question>(question =>
+    {
+      question.HasOne(q => q.Template)
+            .WithMany(f => f.Questions)
+            .HasForeignKey(q => q.TemplateId)
+            .IsRequired();
+    });
 
-        // Question (One-to-Many with Form)
-        builder.Entity<Question>(question =>
-        {
-            question.HasOne(q => q.Form)
-              .WithMany(f => f.Questions)
-              .HasForeignKey(q => q.FormId)
-              .IsRequired();
-        });
+    // QuestionOption (One-to-Many with Question)
+    builder.Entity<QuestionOption>(questionOption =>
+    {
+      questionOption.HasOne(qo => qo.Question)
+            .WithMany(q => q.Options)
+            .HasForeignKey(qo => qo.QuestionId)
+            .IsRequired();
+    });
 
-        // QuestionOption (One-to-Many with Question)
-        builder.Entity<QuestionOption>(questionOption =>
-        {
-            questionOption.HasOne(qo => qo.Question)
-              .WithMany(q => q.Options)
-              .HasForeignKey(qo => qo.QuestionId)
-              .IsRequired();
-        });
+    // Form (One-to-Many with Template and ApplicationUser)
+    builder.Entity<Form>(form =>
+    {
+      form.HasOne(r => r.Template)
+            .WithMany(f => f.Forms)
+            .HasForeignKey(r => r.TemplateId)
+            .IsRequired();
 
-        // Response (One-to-Many with Form and ApplicationUser)
-        builder.Entity<Response>(response =>
-        {
-            response.HasOne(r => r.Form)
-              .WithMany(f => f.Responses)
-              .HasForeignKey(r => r.FormId)
-              .IsRequired();
+      form.HasOne(r => r.Author)
+            .WithMany()
+            .HasForeignKey(r => r.AuthorId)
+            .IsRequired();
+    });
 
-            response.HasOne(r => r.Author)
-              .WithMany()
-              .HasForeignKey(r => r.AuthorId)
-              .IsRequired();
-        });
+    // Response (One-to-Many with Form and Question)
+    builder.Entity<Response>(response =>
+    {
+      response.HasOne(ra => ra.Form)
+            .WithMany(r => r.Responses)
+            .HasForeignKey(ra => ra.FormId)
+            .IsRequired();
 
-        // ResponseAnswer (One-to-Many with Response and Question)
-        builder.Entity<ResponseAnswer>(responseAnswer =>
-        {
-            responseAnswer.HasOne(ra => ra.Response)
-              .WithMany(r => r.Answers)
-              .HasForeignKey(ra => ra.ResponseId)
-              .IsRequired();
+      response.HasOne(ra => ra.Question)
+            .WithMany() // #TODO maybe add responses in question class
+            .HasForeignKey(ra => ra.QuestionId)
+            .IsRequired();
+    });
 
-            responseAnswer.HasOne(ra => ra.Question)
-              .WithMany() // maybe add answers in question class
-              .HasForeignKey(ra => ra.QuestionId)
-              .IsRequired();
-        });
+    // Comment (One-to-Many with Template and ApplicationUser)
+    builder.Entity<Comment>(comment =>
+    {
+      comment.HasOne(c => c.User)
+            .WithMany()
+            .HasForeignKey(c => c.UserId)
+            .IsRequired();
 
-        // Comment (One-to-Many with Form and ApplicationUser)
-        builder.Entity<Comment>(comment =>
-        {
-            comment.HasOne(c => c.User)
-              .WithMany()
-              .HasForeignKey(c => c.UserId)
-              .IsRequired();
+      comment.HasOne(c => c.Template)
+            .WithMany(f => f.Comments)
+            .HasForeignKey(c => c.TemplateId)
+            .IsRequired();
+    });
 
-            comment.HasOne(c => c.Form)
-              .WithMany(f => f.Comments)
-              .HasForeignKey(c => c.FormId)
-              .IsRequired();
-        });
+    // Comment (One-to-Many with Topic and ApplicationUser)
+    builder.Entity<Template>(template =>
+    {
+      template.HasOne(f => f.Creator)
+            .WithMany()
+            .HasForeignKey(f => f.CreatorId)
+            .IsRequired();
 
-        builder.Entity<Form>(form =>
-        {
-            form.HasOne(f => f.Creator)
-              .WithMany()
-              .HasForeignKey(f => f.CreatorId)
-              .IsRequired();
+      template.HasOne(f => f.Topic)
+            .WithMany()
+            .HasForeignKey(f => f.TopicId)
+            .IsRequired();
 
-            form.HasOne(f => f.Topic)
-              .WithMany()
-              .HasForeignKey(f => f.TopicId)
-              .IsRequired();
+    });
 
-        });
-
-    }
+  }
 }

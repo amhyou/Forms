@@ -14,13 +14,13 @@ public class Tag
     [MaxLength(50)]
     public string Name { get; set; } = string.Empty;
 
-    public List<FormTag> FormTags { get; set; } = new();
+    public List<TemplateTag> TemplateTags { get; set; } = new();
 }
 
-public class FormTag
+public class TemplateTag
 {
-    public int FormId { get; set; }
-    public Form? Form { get; set; }
+    public int TemplateId { get; set; }
+    public Template? Template { get; set; }
 
     public int TagId { get; set; }
     public Tag? Tag { get; set; }

@@ -7,39 +7,30 @@ public class Form
     [Key]
     public int Id { get; set; }
 
-    [Required]
-    [MaxLength(255)]
-    public string Title { get; set; } = string.Empty;
+    public int TemplateId { get; set; }
+    public Template? Template { get; set; }
 
-    [MaxLength(1000)]
-    public string Description { get; set; } = string.Empty;
+    public string? AuthorId { get; set; }  // User who answered
+    public ApplicationUser? Author { get; set; }
 
-    public int TopicId { get; set; }
-    public Topic? Topic { get; set; }
-
-    [MaxLength(255)]
-    public string? ImageUrl { get; set; }
-
-    public string? CreatorId { get; set; }
-    public ApplicationUser? Creator { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public FormType Type { get; set; }
-    public List<AllowedUser> AllowedUsers { get; set; } = new();
-
-    public List<FormTag> FormTags { get; set; } = new();
-
-    public List<Question> Questions { get; set; } = new();
+    public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
 
     public List<Response> Responses { get; set; } = new();
-
-    public List<Comment> Comments { get; set; } = new();
 }
 
 
-public enum FormType
+public class Response
 {
-    Public,
-    Restricted
+    [Key]
+    public int Id { get; set; }
+
+    public int FormId { get; set; }
+    public Form? Form { get; set; }
+
+    public int QuestionId { get; set; }
+    public Question? Question { get; set; }
+
+    [Required]
+    [MaxLength(1000)]
+    public string? Answer { get; set; }
 }
