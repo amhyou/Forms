@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using forms.Data;
@@ -11,9 +12,11 @@ using forms.Data;
 namespace forms.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250209180638_includeTemplate")]
+    partial class includeTemplate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace forms.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("ApplicationUserTemplate", b =>
-                {
-                    b.Property<string>("AllowedUsersId")
-                        .HasColumnType("text");
-
-                    b.Property<int>("TemplatesId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("AllowedUsersId", "TemplatesId");
-
-                    b.HasIndex("TemplatesId");
-
-                    b.ToTable("Template_Users", (string)null);
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -169,21 +157,6 @@ namespace forms.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("TagTemplate", b =>
-                {
-                    b.Property<int>("TagsId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TemplatesId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("TagsId", "TemplatesId");
-
-                    b.HasIndex("TemplatesId");
-
-                    b.ToTable("Template_Tags", (string)null);
-                });
-
             modelBuilder.Entity("forms.Data.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -246,6 +219,21 @@ namespace forms.Data.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("forms.Models.AllowedUser", b =>
+                {
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("TemplateId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AllowedUsers");
                 });
 
             modelBuilder.Entity("forms.Models.Comment", b =>
@@ -446,6 +434,21 @@ namespace forms.Data.Migrations
                     b.ToTable("Templates");
                 });
 
+            modelBuilder.Entity("forms.Models.TemplateTag", b =>
+                {
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("TemplateId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("TemplateTags");
+                });
+
             modelBuilder.Entity("forms.Models.Topic", b =>
                 {
                     b.Property<int>("Id")
@@ -465,21 +468,6 @@ namespace forms.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Topics");
-                });
-
-            modelBuilder.Entity("ApplicationUserTemplate", b =>
-                {
-                    b.HasOne("forms.Data.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("AllowedUsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("forms.Models.Template", null)
-                        .WithMany()
-                        .HasForeignKey("TemplatesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -533,19 +521,23 @@ namespace forms.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TagTemplate", b =>
+            modelBuilder.Entity("forms.Models.AllowedUser", b =>
                 {
-                    b.HasOne("forms.Models.Tag", null)
-                        .WithMany()
-                        .HasForeignKey("TagsId")
+                    b.HasOne("forms.Models.Template", "Template")
+                        .WithMany("AllowedUsers")
+                        .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("forms.Models.Template", null)
+                    b.HasOne("forms.Data.ApplicationUser", "User")
                         .WithMany()
-                        .HasForeignKey("TemplatesId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Template");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("forms.Models.Comment", b =>
@@ -646,6 +638,25 @@ namespace forms.Data.Migrations
                     b.Navigation("Topic");
                 });
 
+            modelBuilder.Entity("forms.Models.TemplateTag", b =>
+                {
+                    b.HasOne("forms.Models.Tag", "Tag")
+                        .WithMany("TemplateTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("forms.Models.Template", "Template")
+                        .WithMany("FormTags")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tag");
+
+                    b.Navigation("Template");
+                });
+
             modelBuilder.Entity("forms.Models.Form", b =>
                 {
                     b.Navigation("Responses");
@@ -656,9 +667,18 @@ namespace forms.Data.Migrations
                     b.Navigation("Options");
                 });
 
+            modelBuilder.Entity("forms.Models.Tag", b =>
+                {
+                    b.Navigation("TemplateTags");
+                });
+
             modelBuilder.Entity("forms.Models.Template", b =>
                 {
+                    b.Navigation("AllowedUsers");
+
                     b.Navigation("Comments");
+
+                    b.Navigation("FormTags");
 
                     b.Navigation("Forms");
 

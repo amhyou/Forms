@@ -14,14 +14,5 @@ public class Tag
     [MaxLength(50)]
     public string Name { get; set; } = string.Empty;
 
-    public List<TemplateTag> TemplateTags { get; set; } = new();
-}
-
-public class TemplateTag
-{
-    public int TemplateId { get; set; }
-    public Template? Template { get; set; }
-
-    public int TagId { get; set; }
-    public Tag? Tag { get; set; }
+    public List<Template> Templates { get; set; } = new();
 }

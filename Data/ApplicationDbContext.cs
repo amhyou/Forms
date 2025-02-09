@@ -9,63 +9,34 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<Template> Templates { get; set; }
   public DbSet<Topic> Topics { get; set; }
-  public DbSet<AllowedUser> AllowedUsers { get; set; }
   public DbSet<Comment> Comments { get; set; }
   public DbSet<Question> Questions { get; set; }
   public DbSet<QuestionOption> QuestionOptions { get; set; }
   public DbSet<Form> Forms { get; set; }
   public DbSet<Response> Responses { get; set; }
   public DbSet<Tag> Tags { get; set; }
-  public DbSet<TemplateTag> TemplateTags { get; set; }
 
 
   protected override void OnModelCreating(ModelBuilder builder)
   {
     base.OnModelCreating(builder);
 
-    // AllowedUser (Many-to-Many with Template and ApplicationUser)
-    builder.Entity<AllowedUser>(allowedUser =>
-    {
-      allowedUser.HasKey(au => new { au.TemplateId, au.UserId });
-
-      allowedUser.HasOne(au => au.Template)
-            .WithMany(f => f.AllowedUsers)
-            .HasForeignKey(au => au.TemplateId)
-            .IsRequired();
-    });
-
-    // TemplateTag (Many-to-Many with Template and Tag)
-    builder.Entity<TemplateTag>(templateTag =>
-    {
-      templateTag.HasKey(ft => new { ft.TemplateId, ft.TagId });
-
-      templateTag.HasOne(ft => ft.Template)
-            .WithMany(f => f.FormTags)
-            .HasForeignKey(ft => ft.TemplateId)
-            .IsRequired();
-
-      templateTag.HasOne(ft => ft.Tag)
-            .WithMany(t => t.TemplateTags)
-            .HasForeignKey(ft => ft.TagId)
-            .IsRequired();
-    });
-
     // Question (One-to-Many with Template)
     builder.Entity<Question>(question =>
     {
       question.HasOne(q => q.Template)
-            .WithMany(f => f.Questions)
-            .HasForeignKey(q => q.TemplateId)
-            .IsRequired();
+          .WithMany(f => f.Questions)
+          .HasForeignKey(q => q.TemplateId)
+          .IsRequired();
     });
 
     // QuestionOption (One-to-Many with Question)
     builder.Entity<QuestionOption>(questionOption =>
     {
       questionOption.HasOne(qo => qo.Question)
-            .WithMany(q => q.Options)
-            .HasForeignKey(qo => qo.QuestionId)
-            .IsRequired();
+              .WithMany(q => q.Options)
+              .HasForeignKey(qo => qo.QuestionId)
+              .IsRequired();
     });
 
     // Form (One-to-Many with Template and ApplicationUser)
@@ -122,6 +93,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(f => f.TopicId)
             .IsRequired();
+
+
+      template.HasMany(s => s.Tags)
+        .WithMany(c => c.Templates)
+        .UsingEntity(j => j.ToTable("Template_Tags"));
+
+      template.HasMany(s => s.AllowedUsers)
+        .WithMany(c => c.Templates)
+        .UsingEntity(j => j.ToTable("Template_Users"));
 
     });
 
