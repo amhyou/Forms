@@ -1,0 +1,194 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject MinioService MinioService
+@using forms.Components.Template.Shared
+@using forms.Models;
+@using Microsoft.AspNetCore.Components.Forms
+
+<!-- Body Content -->
+<div class="container mt-4 text-center">
+    <div class="d-flex justify-content-center">
+        <ul class="nav nav-tabs" id="quizTabs" role="tablist">
+            <li class="nav-item @( Tab == 0 ? "active":"")" role="presentation">
+                <a @onclick="() => Tab = 0" class="nav-link" data-bs-toggle="tab" href="#" role="tab">Create
+                    Quiz</a>
+            </li>
+            <li class="nav-item @( Tab == 1 ? "active":"")" role="presentation">
+                <a @onclick="() => Tab = 1" class="nav-link" data-bs-toggle="tab" href="#" role="tab">Responses</a>
+            </li>
+            <li class="nav-item @( Tab == 2 ? "active":"")" role="presentation">
+                <a @onclick="() => Tab = 2" class="nav-link" data-bs-toggle="tab" href="#" role="tab">Settings</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content mt-4">
+
+        @if (Tab == 0)
+        {
+            <div class="container mt-4">
+                <div class="card p-4 mx-auto" style="max-width: 600px;">
+                    <h4 class="text-primary">Create a Quiz</h4>
+                    <form>
+                        <!-- Quiz Title -->
+                        <div class="mb-3">
+                            <label class="form-label">Quiz Title</label>
+                            <input type="text" class="form-control" placeholder="Enter quiz title">
+                        </div>
+
+                        <!-- Quiz Description -->
+                        <div class="mb-3">
+                            <label class="form-label">Quiz Description</label>
+                            <textarea class="form-control" rows="3" placeholder="Enter quiz description"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quiz Image</label>
+                            <InputFile OnChange="@HandleImageSelected" accept="image/*" class="form-control" />
+                            @if (_imageUrl != null)
+                            {
+                                <img src="@_imageUrl" alt="Quiz Image" class="img-fluid mt-2" />
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tags</label>
+                            <div class="border rounded p-1 d-flex flex-wrap">
+                                @foreach (var tag in Tags)
+                                {
+                                    <div class="badge bg-primary me-1 mb-1">
+                                        @tag
+                                        <button type="button" class="btn-close btn-close-white ms-1" aria-label="Close"
+                                            @onclick="@(() => RemoveTag(tag))"></button>
+                                    </div>
+                                }
+                                <InputText @oninput="HandleTagInput" @bind-value="tagInput"
+                                    class="form-control border-0 flex-grow-1" placeholder="Enter tags" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Topic</label>
+                            <InputSelect @bind-Value="Topic" class="form-select">
+                                @foreach (var topic in AvailableTopics)
+                                {
+                                    <option value="@topic">@topic</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <!-- Questions Section -->
+                        <div id="questionsContainer">
+                            @foreach (var Question in Questions)
+                            {
+                                <Question RemoveQuestion="RemoveQuestion" Info="Question" />
+                            }
+                        </div>
+
+                        <!-- Add Question Button -->
+                        <button @onclick="AddEmptyQuestion" type="button" class="btn btn-outline-primary w-100"
+                            id="addQuestion">Add Question</button>
+
+                        <!-- Save Quiz Button -->
+                        <button type="submit" class="btn btn-primary w-100 mt-3">Save Quiz</button>
+                    </form>
+                </div>
+            </div>
+        }
+        <!-- Quiz Creation Component -->
+
+        @if (Tab == 1)
+        {
+            <!-- Other Tabs Placeholder -->
+            <div class="tab-pane fade" id="tab2" role="tabpanel">
+                <p>Content for Tab 2</p>
+            </div>
+        }
+        @if (Tab == 2)
+        {
+            <div class="tab-pane fade" id="tab3" role="tabpanel">
+                <p>Content for Tab 3</p>
+            </div>
+        }
+
+    </div>
+</div>
+
+
+@code {
+    private int Tab = 0;
+
+    private List<string> Tags = new();
+
+    private string Topic = "Default";
+    private List<string> AvailableTopics = new() { "aze", "asqd", "dfgdfg", "fdgdfg" };
+
+    private List<QuestionInfo> Questions = new();
+
+    private void AddEmptyQuestion()
+    {
+        Questions.Add(new QuestionInfo
+        {
+
+            Order = Questions.Count,
+            Text = $"Question {Questions.Count + 1}",
+            Type = QuestionType.ShortAnswer,
+
+        });
+        Console.WriteLine($"question added {Questions.Count + 1}");
+    }
+    private void RemoveQuestion(int QuestionOrder)
+    {
+        Questions.RemoveAll(item => item.Order == QuestionOrder);
+        for (var i = 0; i < Questions.Count; i++)
+        {
+            Questions[i].Order = i;
+        }
+        Console.WriteLine($"question removed {QuestionOrder + 1}");
+    }
+
+    private IBrowserFile? _file;
+    private string? _imageUrl;
+
+    private void HandleImageSelected(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+    }
+    private async Task HandleImageUpload()
+    {
+        if (_file == null) return;
+
+        try
+        {
+            using var stream = _file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            _imageUrl = await MinioService.UploadImageAsync(stream, _file.Name, _file.ContentType);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex);
+        }
+    }
+
+    private string tagInput = "";
+
+    private async Task HandleTagInput(ChangeEventArgs e)
+    {
+        string inputValue = e.Value!.ToString()!;
+        if (!string.IsNullOrWhiteSpace(inputValue) && inputValue.EndsWith(" "))
+        {
+            string tag = inputValue.Trim();
+            if (!Tags.Contains(tag))
+            {
+                Tags.Add(tag);
+                tagInput = "";
+                await Task.Delay(1);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void RemoveTag(string tagToRemove)
+    {
+        Tags.Remove(tagToRemove);
+    }
+}

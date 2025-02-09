@@ -1,0 +1,71 @@
+@implements IDisposable
+@using forms.Models;
+
+<div class="question mb-3 p-3 border rounded position-relative">
+    <label class="form-label">Question</label>
+    <input @bind-value="Info!.Text" type="text" class="form-control mb-2" placeholder="Enter question text">
+
+    <label class="form-label">Answer Type</label>
+    <select class="form-select mb-2 answerType" @onchange="HandleAnswerTypeChange">
+        <option value="@QuestionType.ShortAnswer">Short Answer</option>
+        <option value="@QuestionType.Paragraph">Paragraph</option>
+        <option value="@QuestionType.Integer">Positive Integer</option>
+        <option value="@QuestionType.Checkbox">Multiple Choice</option>
+    </select>
+
+    <div class="multiple-choice-options @(showMultipleChoiceOptions ? "" : "d-none")">
+        @foreach (var option in Info!.Options)
+        {
+            <div class="input-group mb-2">
+                <input type="text" class="form-control" placeholder="Option" @bind="option.Text">
+                <button class="btn btn-outline-danger" type="button" @onclick="@(() => RemoveOption(option))">
+                    <i class="oi oi-minus"></i>
+                </button>
+            </div>
+        }
+        <button class="btn btn-primary btn-sm" type="button" @onclick="AddOption">Add Option</button>
+    </div>
+
+    <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" type="button"
+        @onclick="@(() => RemoveQuestion.InvokeAsync(Info!.Order))">
+        <i class="oi oi-trash"></i>
+    </button>
+</div>
+
+@code {
+
+    [Parameter]
+    public QuestionInfo? Info { get; set; }
+
+    [Parameter]
+    public EventCallback<int> RemoveQuestion { get; set; }
+
+    private bool showMultipleChoiceOptions = false;
+
+
+    private void HandleAnswerTypeChange(ChangeEventArgs e)
+    {
+        string selectedValue = e.Value!.ToString()!;
+        showMultipleChoiceOptions = selectedValue == QuestionType.Checkbox.ToString();
+
+        if (showMultipleChoiceOptions && Info?.Options.Count == 0) // Initialize with at least 2 options
+        {
+            AddOption();
+            AddOption();
+        }
+    }
+
+    private void AddOption()
+    {
+        Info?.Options.Add(new MultipleChoiceOption());
+    }
+
+    private void RemoveOption(MultipleChoiceOption option)
+    {
+        Info?.Options.Remove(option);
+    }
+
+    public void Dispose()
+    {
+    }
+}
