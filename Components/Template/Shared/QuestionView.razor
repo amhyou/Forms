@@ -3,7 +3,7 @@
 
 <div class="question mb-3 p-3 border rounded position-relative">
     <label class="form-label">Question</label>
-    <input @bind-value="Info!.Text" type="text" class="form-control mb-2" placeholder="Enter question text">
+    <input @bind-value="newQuestion!.Text" type="text" class="form-control mb-2" placeholder="Enter question text">
 
     <label class="form-label">Answer Type</label>
     <select class="form-select mb-2 answerType" @onchange="HandleAnswerTypeChange">
@@ -14,10 +14,10 @@
     </select>
 
     <div class="multiple-choice-options @(showMultipleChoiceOptions ? "" : "d-none")">
-        @foreach (var option in Info!.Options)
+        @foreach (var option in newQuestion!.Options)
         {
             <div class="input-group mb-2">
-                <input type="text" class="form-control" placeholder="Option" @bind="option.Text">
+                <input type="text" class="form-control" placeholder="Option" @bind="option.Option">
                 <button class="btn btn-outline-danger" type="button" @onclick="@(() => RemoveOption(option))">
                     <i class="oi oi-minus"></i>
                 </button>
@@ -27,7 +27,7 @@
     </div>
 
     <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" type="button"
-        @onclick="@(() => RemoveQuestion.InvokeAsync(Info!.Order))">
+        @onclick="@(() => RemoveQuestion.InvokeAsync())">
         <i class="oi oi-trash"></i>
     </button>
 </div>
@@ -35,10 +35,10 @@
 @code {
 
     [Parameter]
-    public QuestionInfo? Info { get; set; }
+    public Question? newQuestion { get; set; }
 
     [Parameter]
-    public EventCallback<int> RemoveQuestion { get; set; }
+    public EventCallback RemoveQuestion { get; set; }
 
     private bool showMultipleChoiceOptions = false;
 
@@ -48,7 +48,7 @@
         string selectedValue = e.Value!.ToString()!;
         showMultipleChoiceOptions = selectedValue == QuestionType.Checkbox.ToString();
 
-        if (showMultipleChoiceOptions && Info?.Options.Count == 0) // Initialize with at least 2 options
+        if (showMultipleChoiceOptions && newQuestion?.Options.Count == 0) // Initialize with at least 2 options
         {
             AddOption();
             AddOption();
@@ -57,15 +57,16 @@
 
     private void AddOption()
     {
-        Info?.Options.Add(new MultipleChoiceOption());
+        newQuestion?.Options.Add(new QuestionOption());
     }
 
-    private void RemoveOption(MultipleChoiceOption option)
+    private void RemoveOption(QuestionOption option)
     {
-        Info?.Options.Remove(option);
+        newQuestion?.Options.Remove(option);
     }
 
     public void Dispose()
     {
+
     }
 }

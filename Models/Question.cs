@@ -7,6 +7,7 @@ public class Question
     public int Id { get; set; }
     public int TemplateId { get; set; }
     public Template? Template { get; set; }
+    public int Order { get; set; }
 
     [Required]
     [MaxLength(255)]
@@ -29,7 +30,6 @@ public class QuestionOption
 {
     [Key]
     public int Id { get; set; }
-
     public int QuestionId { get; set; }
     public Question? Question { get; set; }
 

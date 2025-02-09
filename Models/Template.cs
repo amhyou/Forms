@@ -25,18 +25,11 @@ public class Template
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public TemplateType Type { get; set; }
+    public bool IsPublic { get; set; } = true;
     public List<ApplicationUser> AllowedUsers { get; set; } = new();
 
     public List<Tag> Tags { get; set; } = new();
     public List<Question> Questions { get; set; } = new();
     public List<Form> Forms { get; set; } = new();
     public List<Comment> Comments { get; set; } = new();
-}
-
-
-public enum TemplateType
-{
-    Public,
-    Restricted
 }
