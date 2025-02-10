@@ -37,6 +37,8 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 
 builder.Services.AddSingleton<MinioService>();
 
+builder.Services.AddSingleton<LinkService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
