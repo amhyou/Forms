@@ -1,0 +1,28 @@
+@page "/"
+@rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using forms.Components.Template.Shared
+@using forms.Data;
+@using forms.Models;
+@inject ApplicationDbContext _db
+@inject LinkService LinkService
+
+<div class="template-list-wrapper">
+    @foreach (var template in templateList)
+    {
+        <a href="/Form/@(LinkService.EncryptId(template.Id))" class="card-link">
+            <TemplateView Item="template" />
+        </a>
+    }
+</div>
+
+@code {
+    private List<Template> templateList = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        templateList = await _db.Templates.Where(t => t.CreatorId == "016cc48d-e295-49b1-a8f1-9c7b2508d7e1").ToListAsync();
+        await base.OnInitializedAsync();
+    }
+}

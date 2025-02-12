@@ -1,0 +1,129 @@
+@page "/Form/{HashId}"
+@rendermode InteractiveServer
+@using forms.Models
+@using forms.Data
+@using Microsoft.EntityFrameworkCore
+@inject LinkService LinkService
+@inject ApplicationDbContext _db
+
+
+<div class="form-container">
+    <div class="form-header">
+        @if (!string.IsNullOrEmpty(templateForm?.ImageUrl))
+        {
+            <img src="@templateForm.ImageUrl" alt="@templateForm.Title" class="form-image">
+        }
+        <div class="form-header-content">
+            <h1>@templateForm?.Title</h1>
+            <p class="form-description">@templateForm?.Description</p>
+
+            <div class="form-meta">
+                <div class="d-flex align-items-center">
+                    <span class="me-2">Creator: @templateForm?.Creator?.UserName</span>
+                    <span class="me-2">Topic: @templateForm?.Topic?.Name</span>
+                    @if (templateForm?.Tags != null)
+                    {
+                        @foreach (var tag in templateForm.Tags)
+                        {
+                            <span class="badge bg-primary me-1">@tag.Name</span>
+                        }
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-body">
+        @if (templateForm?.Questions != null)
+        {
+            @foreach (var (question, questionIndex) in templateForm.Questions.Select((q, i) => (Question: q, Index: i)))
+            {
+                <div class="question-container mb-4">
+                    <label class="form-label">@question.Text</label>
+
+
+                    @if (question.Type == QuestionType.Checkbox)
+                    {
+                        <InputRadioGroup Name="@questionIndex.ToString()" @bind-Value="newForm.Responses[questionIndex].Answer">
+                            @foreach (var option in question.Options)
+                            {
+                                <div class="form-check">
+                                    <InputRadio Value="@option.Option" id="@($"option-{option.Option}-{questionIndex}")" />
+                                    <label class="form-check-label" for="@($"option-{option.Option}-{questionIndex}")">
+                                        @option.Option
+                                    </label>
+                                </div>
+                            }
+                        </InputRadioGroup>
+                    }
+                    else if (question.Type == QuestionType.ShortAnswer)
+                    {
+                        <InputText @bind-value="newForm.Responses[questionIndex].Answer" type="text" class="form-control" />
+                    }
+                    else if (question.Type == QuestionType.Paragraph)
+                    {
+                        <textarea @bind="newForm.Responses[questionIndex].Answer" class="form-control"></textarea>
+                    }
+                    else if (question.Type == QuestionType.Integer)
+                    {
+                        <InputText @bind-value="newForm.Responses[questionIndex].Answer" type="number" class="form-control" />
+                    }
+                </div>
+            }
+        }
+        <button @onclick="SaveForm" class="btn btn-primary">Submit</button>
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public string? HashId { get; set; }
+
+    private Template? templateForm { get; set; }
+    private forms.Models.Form newForm { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var templateId = LinkService.DecryptId(HashId!);
+        templateForm = await _db.Templates.Include(t => t.Topic).Include(t => t.Tags).Include(t => t.Questions).ThenInclude(q =>
+        q.Options).AsSplitQuery().FirstOrDefaultAsync(t => t.Id == templateId);
+
+        var existingForm = await _db.Forms.Include(f => f.Responses).FirstOrDefaultAsync(f => f.TemplateId == templateId &&
+        f.AuthorId ==
+        "016cc48d-e295-49b1-a8f1-9c7b2508d7e1");
+        if (existingForm != null)
+        {
+            newForm = existingForm;
+        }
+        else
+        {
+            newForm.TemplateId = templateId;
+            newForm.AuthorId = "016cc48d-e295-49b1-a8f1-9c7b2508d7e1";
+            newForm.Responses = templateForm?.Questions.Select(q => new Response
+            {
+                QuestionId = q.Id,
+                Answer = string.Empty
+            }).ToList()!;
+        }
+        await base.OnInitializedAsync();
+    }
+
+    private async Task SaveForm()
+    {
+        if (newForm.Responses.Any(response => string.IsNullOrEmpty(response.Answer)))
+        {
+            Console.WriteLine("Please fill all the question");
+            return;
+        }
+        if (newForm.Id == default)
+        {
+            _db.Forms.Add(newForm);
+        }
+        else
+        {
+            _db.Forms.Update(newForm);
+        }
+        await _db.SaveChangesAsync();
+    }
+}

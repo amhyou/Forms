@@ -1,0 +1,43 @@
+.template-card {
+    width: 350px;
+    /* Fixed width for square-like appearance */
+    height: 350px;
+    /* Fixed height for square-like appearance */
+    display: flex;
+    /* Enable flexbox for card */
+    flex-direction: column;
+    /* Stack content vertically */
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* Make content fill card height */
+}
+
+.card-img-placeholder {
+    height: 200px;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    font-style: italic;
+}
+
+.card-img-top {
+    object-fit: cover;
+    height: 200px;
+}
+
+.card-body {
+    flex-grow: 1;
+    /* Allow body to expand and push footer down */
+}
+
+.description-preview {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+}

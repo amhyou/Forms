@@ -1,0 +1,52 @@
+@using forms.Models
+
+<div class="card template-card mb-3"> @* Added template-card class *@
+    <div class="card-content"> @* Added card-content wrapper *@
+        @if (!string.IsNullOrEmpty(Item.ImageUrl))
+        {
+            <img src="@Item.ImageUrl" class="card-img-top" alt="@Item.Title"> @* Image on top *@
+        }
+        else
+        {
+            <div class="card-img-placeholder"></div>
+        }
+        <div class="card-body">
+            <h5 class="card-title">@Item.Title</h5>
+            <p class="card-text description-preview">
+                @if (Item.Description.Length > 100)
+                {
+                    @Item.Description.Substring(0, 100)
+                }
+                else
+                {
+                    @Item.Description
+                }
+            </p>
+            <div class="mt-auto"> @* Push footer to bottom *@
+                @if (Item.Tags.Any())
+                {
+                    <div class="mb-2">
+                        @foreach (var tag in Item.Tags)
+                        {
+                            <span class="badge bg-primary me-1">@tag.Name</span>
+                        }
+                    </div>
+                }
+                <p class="card-text small text-muted">Topic: @Item.Topic?.Name</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <p class="card-text small text-muted">Creator: @Item.Creator?.UserName</p>
+
+                    <p class="card-text small text-muted">
+                        Created: @Item.CreatedAt
+                    </p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Template Item { get; set; } = new();
+}

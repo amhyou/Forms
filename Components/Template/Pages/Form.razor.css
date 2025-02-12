@@ -1,0 +1,71 @@
+.form-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+    /* Light background color */
+}
+
+.form-header {
+    display: flex;
+    flex-direction: column;
+    /* Stack header content below image */
+    align-items: flex-start;
+    /* Align header content to the left */
+    margin-bottom: 20px;
+}
+
+.form-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-bottom: 20px;
+    /* Add margin below the image */
+}
+
+.form-header-content {
+    padding: 0 20px;
+    /* Add padding to header content */
+}
+
+.form-title {
+    margin-bottom: 10px;
+}
+
+.form-description {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.form-meta {
+    color: #888;
+    font-size: small;
+}
+
+.question-container {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.question-container:last-child {
+    border-bottom: none;
+    /* Remove border from last question */
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.form-check {
+    margin-bottom: 8px;
+}
+
+.btn-primary {
+    margin-top: 20px;
+}

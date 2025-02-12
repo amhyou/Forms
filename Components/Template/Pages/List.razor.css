@@ -1,0 +1,40 @@
+.template-list-wrapper {
+    display: flex;
+    /* Use flexbox for horizontal scrolling */
+    flex-wrap: wrap;
+    /* Allow wrapping to new lines */
+    gap: 20px;
+    /* Spacing between cards */
+    justify-content: center;
+    /* Center the cards horizontally */
+    padding: 20px;
+
+    overflow-x: auto;
+    /* Enable horizontal scrolling if needed */
+    width: fit-content;
+    /* Or a specific width if you prefer */
+    margin: 0 auto;
+    /* Center the wrapper */
+}
+
+.template-list-wrapper p {
+    text-align: center;
+    font-style: italic;
+    color: #888;
+}
+
+
+.card-link {
+    text-decoration: none;
+    /* Remove underline from link */
+    color: inherit;
+    /* Inherit color from parent */
+    display: block;
+    /* Make the <a> tag a block element to fill the card space */
+}
+
+.card:hover {
+    /*... your existing hover styles... */
+    cursor: pointer;
+    /* Indicate it's clickable */
+}
