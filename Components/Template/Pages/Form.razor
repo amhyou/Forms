@@ -72,6 +72,15 @@
                 </div>
             }
         }
+
+        <div class="form-check mt-3">
+            <InputCheckbox @bind-Value="sendCopyToEmail" class="form-check-input" id="sendCopyCheckbox" />
+            <label class="form-check-label" for="sendCopyCheckbox">
+                Send a copy to my email
+            </label>
+        </div>
+
+
         <button @onclick="SaveForm" class="btn btn-primary">Submit</button>
     </div>
 </div>
@@ -82,6 +91,8 @@
 
     private Template? templateForm { get; set; }
     private forms.Models.Form newForm { get; set; } = new();
+
+    private bool sendCopyToEmail = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -115,6 +126,11 @@
         {
             Console.WriteLine("Please fill all the question");
             return;
+        }
+        if (sendCopyToEmail)
+        {
+            Console.WriteLine("User opted to receive a copy via email.");
+            // Add your email-sending logic here
         }
         if (newForm.Id == default)
         {

@@ -11,8 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// builder.Services.AddRazorPages()
-//     .AddMicrosoftIdentityUI();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
@@ -38,22 +36,6 @@ builder.Services.AddAuthentication(options =>
     .AddIdentityCookies();
 
 
-// builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-//     .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
-// .EnableTokenAcquisitionToCallDownstreamApi()
-// .AddInMemoryTokenCaches();
-
-// builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, options =>
-// {
-//     options.Events.OnRedirectToIdentityProviderForSignOut = (context) =>
-//     {
-//         var logoutUri = builder.Configuration["AzureAd:SignedOutCallbackPath"] ?? "/";
-//         context.ProtocolMessage.PostLogoutRedirectUri = context.Request.Scheme + "://" + context.Request.Host + logoutUri;
-//         return Task.CompletedTask;
-//     };
-// });
-
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -64,7 +46,10 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailService>();
+
+builder.Services.AddSingleton<EmailService, EmailService>();
 
 builder.Services.AddSingleton<MinioService>();
 
@@ -93,11 +78,8 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Add additional endpoints required by the Identity /Account Razor components.
+// Additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
-
-// app.MapControllers(); // Ensures Microsoft Identity UI endpoints exist
-// app.MapRazorPages();  // Enables authentication UI pages
 
 app.Run();

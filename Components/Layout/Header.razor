@@ -1,0 +1,52 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<!-- Header Component -->
+<div class="navbar navbar-expand-lg navbar-light bg-light p-3">
+    <div class="container-fluid">
+        <button class="btn btn-outline-secondary me-3" id="themeToggle">Toggle Theme</button>
+        <form class="d-flex mx-auto" style="width: 50%;">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-primary" type="submit">Search</button>
+        </form>
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Manage">
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <form action="Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                        <button type="submit" class="nav-link">
+                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                        </button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <a href="/Account/Login">Login</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = Navigation.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+}

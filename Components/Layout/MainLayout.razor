@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
+
 @* <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -22,25 +23,8 @@
     <span class="dismiss">🗙</span>
 </div> *@
 
-<!-- Header Component -->
-<div class="navbar navbar-expand-lg navbar-light bg-light p-3">
-    <div class="container-fluid">
-        <button class="btn btn-outline-secondary me-3" id="themeToggle">Toggle Theme</button>
-        <form class="d-flex mx-auto" style="width: 50%;">
-            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-            <button class="btn btn-outline-primary" type="submit">Search</button>
-        </form>
-        <AuthorizeView>
-            <Authorized>
-                Hello, @context?.User?.Identity?.Name
-                <a href="/Account/Logout">Logout</a>
-            </Authorized>
-            <NotAuthorized>
-                <a href="/Account/Login">Login</a>
-            </NotAuthorized>
-        </AuthorizeView>
-    </div>
-</div>
+
+<Header />
 
 <article class="content px-4">
     @Body
