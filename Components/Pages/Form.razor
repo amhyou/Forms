@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @inject LinkService LinkService
+@inject EmailService EmailService
 @inject ApplicationDbContext _db
 
 
@@ -128,7 +129,7 @@
         if (sendCopyToEmail)
         {
             Console.WriteLine("User opted to receive a copy via email.");
-            // Add your email-sending logic here
+            await EmailService.SendFormCopyAsync(newForm, templateForm!, "topela256@gmail.com");
         }
         if (newForm.Id == default)
         {
