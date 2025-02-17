@@ -1,10 +1,7 @@
-﻿@page "/Create"
+@page "/Edit/{templateId:int}"
 @rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
-@using forms.Components.Template.Shared
 @using Microsoft.AspNetCore.Components.Forms
-@using forms.Data;
-@using forms.Models;
 @inject ApplicationDbContext _db
 @inject MinioService MinioService
 
@@ -166,9 +163,11 @@
 
 
 @code {
+    [Parameter] public int templateId { get; set; }
+
     private int Tab = 0;
 
-    public Template newTemplate = new Template();
+    public Template newTemplate = new();
 
     private void ChangeTab(int nextTab)
     {
@@ -214,6 +213,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        newTemplate = await _db.Templates.Include(t=>t.Topic).Include(t=>t.Tags).Include(t=>t.Questions).ThenInclude(q=>q.Options).FirstOrDefaultAsync(t=>t.Id == templateId);
         AvailableTopics = await _db.Topics.ToListAsync();
         AllUsers = await _db.Users.ToListAsync();
         await base.OnInitializedAsync();
