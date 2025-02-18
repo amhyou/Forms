@@ -3,9 +3,9 @@ using Microsoft.Extensions.Options;
 using MailKit.Net.Smtp;
 using MimeKit;
 using forms.Data;
-using forms.Components.Pages;
 using forms.Models;
 
+namespace forms.Services;
 
 public class EmailSettings
 {

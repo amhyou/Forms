@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using forms.Components;
 using forms.Components.Account;
 using forms.Data;
+using forms.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +55,8 @@ builder.Services.AddSingleton<EmailService, EmailService>();
 builder.Services.AddSingleton<MinioService>();
 
 builder.Services.AddSingleton<LinkService>();
+
+builder.Services.AddSingleton<CommentService>();
 
 var app = builder.Build();
 

@@ -1,5 +1,7 @@
 using Sqids;
 
+namespace forms.Services;
+
 public class LinkService
 {
     private SqidsEncoder<int> sqids = new SqidsEncoder<int>(new()
