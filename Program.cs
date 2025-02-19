@@ -37,7 +37,7 @@ builder.Services.AddAuthentication(options =>
     .AddIdentityCookies();
 
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("Postgres") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -57,6 +57,12 @@ builder.Services.AddSingleton<MinioService>();
 builder.Services.AddSingleton<LinkService>();
 
 builder.Services.AddSingleton<CommentService>();
+
+builder.Services.AddSingleton(sp =>
+{
+    var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+    return new RedisService(redisConnection);
+});
 
 var app = builder.Build();
 
