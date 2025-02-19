@@ -17,7 +17,7 @@ public class Template
     public int TopicId { get; set; }
     public Topic? Topic { get; set; }
 
-    [MaxLength(255)]
+    [MaxLength(1000)]
     public string? ImageUrl { get; set; }
 
     public string? CreatorId { get; set; }
