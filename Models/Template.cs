@@ -8,10 +8,10 @@ public class Template
     public int Id { get; set; }
 
     [Required]
-    [MaxLength(255)]
+    [MaxLength(1000)]
     public string Title { get; set; } = string.Empty;
 
-    [MaxLength(1000)]
+    [MaxLength(3000)]
     public string Description { get; set; } = string.Empty;
 
     public int TopicId { get; set; }
@@ -32,4 +32,5 @@ public class Template
     public List<Question> Questions { get; set; } = new();
     public List<Form> Forms { get; set; } = new();
     public List<Comment> Comments { get; set; } = new();
+    public List<ApplicationUser> Likes { get; set; } = new();
 }
