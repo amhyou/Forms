@@ -5,7 +5,7 @@
 namespace forms.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class likes : Migration
+    public partial class templateLikes : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

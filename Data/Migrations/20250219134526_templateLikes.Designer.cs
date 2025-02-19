@@ -12,8 +12,8 @@ using forms.Data;
 namespace forms.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250219133715_likes")]
-    partial class likes
+    [Migration("20250219134526_templateLikes")]
+    partial class templateLikes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
