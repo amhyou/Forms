@@ -1,0 +1,34 @@
+@page "/EditTemplate/{HashId}"
+@rendermode InteractiveServer
+@inject ApplicationDbContext _db
+@inject LinkService LinkService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<AuthorizeView>
+    <Authorized>
+        <ControlTemplate newTemplate="newTemplate" />
+    </Authorized>
+    <NotAuthorized>
+        <h1>Need to authentify first</h1>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public string? HashId { get; set; }
+
+
+    public Template newTemplate = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var templateId = LinkService.DecryptId(HashId!);
+
+        newTemplate = await _db.Templates.Include(t => t.Topic).Include(t => t.Tags).Include(t => t.Questions).ThenInclude(q =>
+        q.Options).FirstAsync(t => t.Id == templateId);
+
+        // template should be edited with Admin or Creator of the template
+
+        await base.OnInitializedAsync();
+    }
+}

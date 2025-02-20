@@ -1,0 +1,33 @@
+@page "/EditForm/{HashId}"
+@rendermode InteractiveServer
+@inject LinkService LinkService
+@inject ApplicationDbContext _db
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<ControlForm templateForm="templateForm" newForm="filledForm" isAuthenticated="isAuthenticated" />
+
+@code {
+    [Parameter] public string? HashId { get; set; }
+
+    public bool isAuthenticated = false;
+    public Template templateForm { get; set; } = new();
+    public forms.Models.Form filledForm { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var formId = LinkService.DecryptId(HashId!);
+
+        // check if user have right to edit the form
+
+        var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        isAuthenticated = user.Identity is { IsAuthenticated: true };
+
+        filledForm = await _db.Forms.Include(f => f.Responses).FirstAsync(f => f.Id == formId);
+
+        templateForm = await _db.Templates.Include(t => t.Topic).Include(t => t.Tags).Include(t => t.Questions).ThenInclude(q =>
+        q.Options).AsSplitQuery().FirstAsync(t => t.Id == filledForm.TemplateId);
+
+        await base.OnInitializedAsync();
+    }
+}

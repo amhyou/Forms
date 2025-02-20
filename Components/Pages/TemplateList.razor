@@ -1,0 +1,57 @@
+@page "/"
+@rendermode InteractiveServer
+@inject ApplicationDbContext _db
+@inject LinkService LinkService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="template-list-wrapper">
+    <AuthorizeView>
+        <Authorized>
+            <a href="/CreateTemplate" class="card-link">
+                <div class="template-card create-card">
+                    <div class="create-content">
+                        <i class="fas fa-plus plus-icon"></i>
+                    </div>
+                </div>
+            </a>
+            @foreach (var template in templateList)
+            {
+                <a href="/EditTemplate/@(LinkService.EncryptId(template.Id))" class="card-link">
+                    <TemplateCard Item="template" />
+                </a>
+            }
+        </Authorized>
+        <NotAuthorized>
+            @foreach (var template in templateList)
+            {
+                <a href="/Form/@(LinkService.EncryptId(template.Id))" class="card-link">
+                    <TemplateCard Item="template" />
+                </a>
+            }
+        </NotAuthorized>
+    </AuthorizeView>
+
+</div>
+
+@code {
+    private List<Template> templateList = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        var isAuthenticated = user.Identity is { IsAuthenticated: true };
+        if (isAuthenticated)
+        {
+            var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+            templateList = await _db.Templates.Where(t => t.CreatorId == userId).OrderByDescending(e => e.CreatedAt).ToListAsync();
+        }
+        else
+        {
+            templateList = await _db.Templates.OrderByDescending(e => e.CreatedAt).ToListAsync();
+        }
+
+        await base.OnInitializedAsync();
+    }
+}

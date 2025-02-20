@@ -1,0 +1,170 @@
+@inject LinkService LinkService
+@inject EmailService EmailService
+@inject ApplicationDbContext _db
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="form-container">
+    <div class="form-header">
+        @if (!string.IsNullOrEmpty(templateForm.ImageUrl))
+        {
+            <img src="@templateForm.ImageUrl" alt="@templateForm.Title" class="form-image">
+        }
+        <div class="form-header-content">
+            <h1>@templateForm.Title</h1>
+            <p class="form-description">@templateForm.Description</p>
+
+            <div class="form-meta">
+                <div class="d-flex align-items-center">
+                    <span class="me-2">Creator: @templateForm.Creator?.UserName</span>
+                    <span class="me-2">Topic: @templateForm.Topic?.Name</span>
+                    @if (templateForm.Tags != null)
+                    {
+                        @foreach (var tag in templateForm.Tags)
+                        {
+                            <span class="badge bg-primary me-1">@tag.Name</span>
+                        }
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-body">
+        @if (templateForm.Questions != null)
+        {
+            @foreach (var (question, questionIndex) in templateForm.Questions.Select((q, i) => (Question: q, Index: i)))
+            {
+                <div class="question-container mb-4">
+                    <label class="form-label">@question.Text</label>
+
+
+                    @if (question.Type == QuestionType.Checkbox)
+                    {
+                        <InputRadioGroup Name="@questionIndex.ToString()" @bind-Value="newForm.Responses[questionIndex].Answer"
+                            disabled="@(!isAuthenticated)">
+                            @foreach (var option in question.Options)
+                            {
+                                <div class="form-check">
+                                    <InputRadio Value="@option.Option" id="@($"option-{option.Option}-{questionIndex}")"
+                                        disabled="@(!isAuthenticated)" />
+                                    <label class="form-check-label" for="@($"option-{option.Option}-{questionIndex}")">
+                                        @option.Option
+                                    </label>
+                                </div>
+                            }
+                        </InputRadioGroup>
+                    }
+                    else if (question.Type == QuestionType.ShortAnswer)
+                    {
+                        <InputText @bind-value="newForm.Responses[questionIndex].Answer" type="text"
+                            class="@($"form-control {(string.IsNullOrEmpty(newForm.Responses[questionIndex].Answer) && showValidationErrors ? "invalid-field" : "")}")"
+                            disabled="@(!isAuthenticated)" />
+                    }
+                    else if (question.Type == QuestionType.Paragraph)
+                    {
+                        <textarea @bind="newForm.Responses[questionIndex].Answer"
+                            class="@($"form-control {(string.IsNullOrEmpty(newForm.Responses[questionIndex].Answer) && showValidationErrors ? "invalid-field" : "")}")"
+                            disabled="@(!isAuthenticated)"></textarea>
+                    }
+                    else if (question.Type == QuestionType.Integer)
+                    {
+                        <InputText @bind-value="newForm.Responses[questionIndex].Answer" type="number"
+                            class="@($"form-control {(IsValidPositiveInteger(newForm.Responses[questionIndex].Answer) && showValidationErrors ? "invalid-field" : "")}")"
+                            disabled="@(!isAuthenticated)" />
+                    }
+                    @if (string.IsNullOrEmpty(newForm.Responses[questionIndex].Answer) && showValidationErrors)
+                    {
+                        <span class="error-message">This field is required</span>
+                    }
+                </div>
+            }
+        }
+
+        <div class="form-check mt-3">
+            <InputCheckbox @bind-Value="sendCopyToEmail" class="form-check-input" id="sendCopyCheckbox"
+                disabled="@(!isAuthenticated)" />
+            <label class="form-check-label" for="sendCopyCheckbox">
+                Send a copy to my email
+            </label>
+        </div>
+
+
+        <button @onclick="SaveForm" class="btn btn-primary" disabled="@(!isAuthenticated)">Submit</button>
+    </div>
+</div>
+
+@if (showConfirmation)
+{
+    <div class="modal-backdrop">
+        <div class="modal-content">
+            <h2>Form Submitted Successfully</h2>
+            <p>Your form has been saved!</p>
+            <button class="btn btn-success" @onclick="NavigateToEditForm">OK</button>
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter] public Template templateForm { get; set; } = new();
+    [Parameter] public forms.Models.Form newForm { get; set; } = new();
+    [Parameter] public bool isAuthenticated { get; set; } = false;
+
+    private bool sendCopyToEmail = false;
+
+    private bool showValidationErrors = false;
+
+    private bool showConfirmation = false;
+
+    private async Task SaveForm()
+    {
+        if (newForm.Responses.Any(response => string.IsNullOrEmpty(response.Answer)))
+        {
+            Console.WriteLine("Please fill all the question");
+            showValidationErrors = true;
+            return;
+        }
+
+        var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        if (user.Identity is { IsAuthenticated: false })
+        {
+            Console.WriteLine("have to be authentificated first");
+            return;
+        }
+
+        if (sendCopyToEmail)
+        {
+            var userEmail = user.Identity?.Name;
+            Console.WriteLine("User opted to receive a copy via email.");
+            await EmailService.SendFormCopyAsync(newForm, templateForm!, userEmail!);
+        }
+
+        if (newForm.Id == default)
+        {
+            _db.Forms.Add(newForm);
+        }
+        else
+        {
+            _db.Forms.Update(newForm);
+        }
+        await _db.SaveChangesAsync();
+
+        showConfirmation = true;
+        showValidationErrors = false;
+    }
+
+    private void NavigateToEditForm()
+    {
+        showConfirmation = false;
+        showValidationErrors = false;
+        Navigation.NavigateTo($"/EditForm/{LinkService.EncryptId(newForm.Id)}", forceLoad: true);
+    }
+
+    private bool IsValidPositiveInteger(string? input)
+    {
+        return !string.IsNullOrEmpty(input) && int.TryParse(input, out int result) && result >= 0;
+    }
+}

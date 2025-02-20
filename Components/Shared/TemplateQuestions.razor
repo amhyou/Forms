@@ -1,0 +1,107 @@
+@rendermode InteractiveServer
+
+<!-- Questions Section -->
+<div id="questionsContainer">
+    @foreach (var newQuestion in newTemplate.Questions)
+    {
+        <div class="question mb-3 p-3 border rounded position-relative">
+            <label class="form-label">Question</label>
+            <input @bind-value="newQuestion!.Text" type="text" class="form-control mb-2" placeholder="Enter question text">
+
+            <label class="form-label">Answer Type</label>
+            <select class="form-select mb-2 answerType" @onchange="e => HandleAnswerTypeChange(e, newQuestion)">
+                <option value="@QuestionType.ShortAnswer" selected="@(newQuestion.Type == QuestionType.ShortAnswer)">Short
+                    Answer</option>
+                <option value="@QuestionType.Paragraph" selected="@(newQuestion.Type == QuestionType.Paragraph)">Paragraph
+                </option>
+                <option value="@QuestionType.Integer" selected="@(newQuestion.Type == QuestionType.Integer)">Positive
+                    Integer
+                </option>
+                <option value="@QuestionType.Checkbox" selected="@(newQuestion.Type == QuestionType.Checkbox)">Multiple
+                    Choice
+                </option>
+            </select>
+
+            @if (newQuestion?.Type == QuestionType.Checkbox)
+            {
+                <div class="multiple-choice-options">
+                    @foreach (var option in newQuestion!.Options)
+                    {
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" placeholder="Option" @bind-value="option.Option">
+                            <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveOption(newQuestion, option)">
+                                <i class="oi oi-minus"></i>
+                            </button>
+                        </div>
+                    }
+                    <button class="btn btn-primary btn-sm" type="button" @onclick="() => AddOption(newQuestion)">Add
+                        Option</button>
+                </div>
+            }
+
+
+
+            <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" type="button"
+                @onclick="() => RemoveQuestion(newQuestion)">
+                <i class="oi oi-trash"></i>
+            </button>
+
+        </div>
+
+    }
+    <!-- Add Question Button -->
+    <button @onclick="AddEmptyQuestion" type="button" class="btn btn-outline-primary w-100" id="addQuestion">Add
+        Question</button>
+</div>
+
+
+@code {
+    [Parameter]
+    public Template newTemplate { get; set; } = new();
+
+    private void RemoveQuestion(Question? question)
+    {
+        if (question == null || newTemplate.Questions.Count == 1) return;
+        newTemplate.Questions.Remove(question);
+        for (var i = 0; i < newTemplate.Questions.Count; i++)
+        {
+            newTemplate.Questions[i].Order = i;
+        }
+        StateHasChanged();
+    }
+
+    private void AddEmptyQuestion()
+    {
+        newTemplate.Questions.Add(new Question
+        {
+            Order = newTemplate.Questions.Count,
+            Text = $"Question {newTemplate.Questions.Count + 1}",
+            Type = QuestionType.ShortAnswer,
+
+        });
+    }
+
+    private void HandleAnswerTypeChange(ChangeEventArgs e, Question newQuestion)
+    {
+        Enum.TryParse(e.Value?.ToString(), out QuestionType selectedType);
+
+        newQuestion!.Type = selectedType;
+
+        if (newQuestion?.Type == QuestionType.Checkbox && newQuestion?.Options.Count == 0) // Initialize with at least 2 options
+        {
+            AddOption(newQuestion);
+            AddOption(newQuestion);
+        }
+
+    }
+
+    private void AddOption(Question question)
+    {
+        question?.Options.Add(new QuestionOption());
+    }
+
+    private void RemoveOption(Question question, QuestionOption option)
+    {
+        question?.Options.Remove(option);
+    }
+}

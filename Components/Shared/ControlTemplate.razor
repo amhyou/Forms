@@ -1,0 +1,181 @@
+@inject ApplicationDbContext _db
+@inject MinioService MinioService
+@inject LinkService LinkService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<!-- Body Content -->
+<div class="container mt-4 text-center">
+    <div class="d-flex justify-content-center">
+        <ul class="nav nav-tabs" id="quizTabs" role="tablist">
+            <li class="nav-item @( Tab == 0 ? "active":"")" role="presentation">
+                <a @onclick="() => ChangeTab(0)" class="nav-link" data-bs-toggle="tab" role="tab">General
+                    settings</a>
+            </li>
+            <li class="nav-item @( Tab == 1 ? "active":"")" role="presentation">
+                <a @onclick="() => ChangeTab(1)" class="nav-link" data-bs-toggle="tab" role="tab">Questions</a>
+            </li>
+            <li class="nav-item @( Tab == 2 ? "active":"")" role="presentation">
+                <a @onclick="() => ChangeTab(2)" class="nav-link" data-bs-toggle="tab" role="tab">Results</a>
+            </li>
+            <li class="nav-item @( Tab == 3 ? "active":"")" role="presentation">
+                <a @onclick="() => ChangeTab(3)" class="nav-link" data-bs-toggle="tab" role="tab">Aggregation</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content mt-4">
+        <div class="container mt-4">
+            <div class="card p-4 mx-auto" style="max-width: 600px;">
+                @if (Tab == 0)
+                {
+                    <h4 class="text-primary">Create a Template</h4>
+                    <TemplateGeneral newTemplate="newTemplate" templateImage="templateImage" OnImageChanged="OnImageChanged"
+                        showValidationErrors="showValidationErrors" />
+
+                }
+                else if (Tab == 1)
+                {
+                    <h4 class="text-primary">Create a Questions</h4>
+                    <TemplateQuestions newTemplate="newTemplate" />
+
+                }
+                else if (Tab == 2)
+                {
+                    <h4 class="text-primary">Privacy settings</h4>
+                    <div class="container mt-4">
+                        <p>Content for Tab 2</p>
+                    </div>
+                }
+                else if (Tab == 3)
+                {
+                    <h4 class="text-primary">Aggregations</h4>
+                    <div class="container mt-4">
+                        <p>Content for Tab 3</p>
+                    </div>
+                }
+
+                <button @onclick="SaveTemplate" type="button" class="btn btn-primary w-100 mt-3">Save
+                    Template</button>
+
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+@if (showConfirmation)
+{
+    <div class="modal-backdrop">
+        <div class="modal-content confirmation-modal">
+            <h2>Template Created Successfully</h2>
+            <p>Your Template has been saved!</p>
+            <div class="button-group">
+                <button class="btn btn-primary" @onclick="NavigateToEditTemplate">Edit This Form</button>
+                <button class="btn btn-success" @onclick="NavigateToCreateTemplate">Create Another Form</button>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    [Parameter] public Template newTemplate { get; set; } = new();
+
+    public IBrowserFile? templateImage;
+
+    private int Tab = 0;
+
+    private bool showConfirmation = false;
+
+    public bool showValidationErrors = false;
+
+    private void ChangeTab(int nextTab)
+    {
+        Tab = nextTab;
+    }
+
+    private void OnImageChanged(IBrowserFile? newImage)
+    {
+        templateImage = newImage;
+        StateHasChanged();
+    }
+
+    private async Task<string?> HandleImageUpload()
+    {
+        if (templateImage == null) return null;
+        try
+        {
+            Console.WriteLine("uploading image ...");
+            using var stream = templateImage.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            return await MinioService.UploadImageAsync(stream, templateImage.Name, templateImage.ContentType);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex);
+            return null;
+        }
+    }
+
+
+    private async Task SaveTemplate()
+    {
+        if (string.IsNullOrWhiteSpace(newTemplate.Title) || string.IsNullOrWhiteSpace(newTemplate.Description) ||
+        newTemplate.Questions.Count == 0 || newTemplate.TopicId == default)
+        {
+            Console.WriteLine("correct errors first");
+            showValidationErrors = true;
+            return;
+        }
+        var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        if (user.Identity is { IsAuthenticated: false })
+        {
+            Console.WriteLine("need to be authentificated first");
+            return;
+        }
+
+        if (templateImage != null)
+        {
+            newTemplate.ImageUrl = await HandleImageUpload();
+        }
+
+        if (newTemplate.Id == default)
+        {
+            var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+            newTemplate.CreatorId = userId;
+
+            _db.Templates.Add(newTemplate);
+            await _db.SaveChangesAsync();
+        }
+        else
+        {
+            _db.Templates.Update(newTemplate);
+            await _db.SaveChangesAsync();
+        }
+        showConfirmation = true;
+        showValidationErrors = false;
+    }
+
+    private void NavigateToEditTemplate()
+    {
+        showConfirmation = false;
+        showValidationErrors = false;
+        var encryptedId = LinkService.EncryptId(newTemplate.Id);
+        Navigation.NavigateTo($"/EditTemplate/{encryptedId}", forceLoad: true);
+    }
+
+    private void NavigateToCreateTemplate()
+    {
+        showConfirmation = false;
+        showValidationErrors = false;
+        Navigation.NavigateTo("/CreateTemplate", forceLoad: true);
+    }
+
+    private bool IsValidPositiveInteger(string? input)
+    {
+        return !string.IsNullOrEmpty(input) && int.TryParse(input, out int result) && result >= 0;
+    }
+}

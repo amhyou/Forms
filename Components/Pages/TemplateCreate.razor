@@ -1,0 +1,29 @@
+﻿@page "/CreateTemplate"
+@rendermode InteractiveServer
+
+<AuthorizeView>
+    <Authorized>
+        <ControlTemplate newTemplate="newTemplate" />
+    </Authorized>
+    <NotAuthorized>
+        <h1>Need to authentify first</h1>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    public Template newTemplate = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        newTemplate.TopicId = 4;
+        newTemplate.Questions.Add(new Question
+        {
+            Order = 1,
+            Text = $"Question 1",
+            Type = QuestionType.ShortAnswer,
+
+        });
+        await base.OnInitializedAsync();
+    }
+}

@@ -1,0 +1,112 @@
+@inject RedisService RedisService
+@using NRedisStack.Search
+
+<!-- Quiz Title -->
+<div class="mb-3">
+    <label class="form-label">Quiz Title</label>
+    <input @bind-value="newTemplate.Title" type="text"
+        class="@($"form-control {(string.IsNullOrEmpty(newTemplate.Title) && showValidationErrors ? "invalid-field" : "")}")"
+        placeholder="Enter quiz title" aria-required="true" />
+    @if (string.IsNullOrEmpty(newTemplate.Title) && showValidationErrors)
+    {
+        <span class="error-message">This field is required</span>
+    }
+</div>
+
+<!-- Quiz Description -->
+<div class="mb-3">
+    <label class="form-label">Quiz Description</label>
+    <textarea @bind="newTemplate.Description"
+        class="@($"form-control {(string.IsNullOrEmpty(newTemplate.Description) && showValidationErrors ? "invalid-field" : "")}")"
+        rows="3" placeholder="Enter quiz description" aria-required="true"></textarea>
+    @if (string.IsNullOrEmpty(newTemplate.Description) && showValidationErrors)
+    {
+        <span class="error-message">This field is required</span>
+    }
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Quiz Image</label>
+    <InputFile OnChange="@HandleImageSelected" accept="image/*" class="form-control" />
+    @if (newTemplate.ImageUrl != null)
+    {
+        <img src="@newTemplate.ImageUrl" alt="Quiz Image" class="img-fluid mt-2" />
+    }
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Tags</label>
+    <div class="border rounded p-1 d-flex flex-wrap">
+        @foreach (var tag in newTemplate.Tags)
+        {
+            <div class="badge bg-primary me-1 mb-1">
+                @tag.Name
+                <button type="button" class="btn-close btn-close-white ms-1" aria-label="Close"
+                    @onclick="@(() => newTemplate.Tags.Remove(tag))"></button>
+            </div>
+        }
+        <InputText @oninput="HandleTagInput" @bind-value="tagInput" class="form-control border-0 flex-grow-1"
+            placeholder="Enter tags" />
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Topic</label>
+    <InputSelect @bind-Value="newTemplate.TopicId" class="form-select" aria-required="true">
+        @foreach (var topic in AvailableTopics)
+        {
+            <option value="@topic.Id" selected="@topic.Id == 4">@topic.Name</option>
+        }
+    </InputSelect>
+</div>
+
+
+
+@code {
+    [Parameter] public Template newTemplate { get; set; } = new();
+
+    [Parameter] public IBrowserFile? templateImage { get; set; }
+
+    [Parameter] public EventCallback<IBrowserFile?> OnImageChanged { get; set; }
+
+    [Parameter] public bool showValidationErrors { get; set; }
+
+    public List<Topic> AvailableTopics { get; set; } = new();
+
+    private string tagInput { get; set; } = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var ft = RedisService.GetSearch();
+        var topics = ft.Search("idx_topics", new Query("*").Limit(0, 10));
+
+        AvailableTopics = topics.Documents.Select(d => new Topic { Name = d["Name"].ToString(), Id = int.Parse(d["Id"]!) }
+        ).ToList();
+
+        await base.OnInitializedAsync();
+    }
+
+
+    private void HandleImageSelected(InputFileChangeEventArgs e)
+    {
+        templateImage = e.File;
+        OnImageChanged.InvokeAsync(templateImage);
+    }
+
+    private void HandleTagInput(ChangeEventArgs e)
+    {
+        string inputValue = e.Value!.ToString()!;
+
+        if (!string.IsNullOrWhiteSpace(inputValue) && inputValue.EndsWith(" "))
+        {
+            string tag = inputValue.Trim();
+            if (!newTemplate.Tags.Select(t => t.Name).Contains(tag))
+            {
+                newTemplate.Tags.Add(new Tag { Name = tag });
+                tagInput = string.Empty;
+                StateHasChanged();
+            }
+        }
+    }
+}
