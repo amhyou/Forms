@@ -25,7 +25,9 @@
 
         filledForm = await _db.Forms.Include(f => f.Responses).FirstAsync(f => f.Id == formId);
 
-        templateForm = await _db.Templates.Include(t => t.Topic).Include(t => t.Tags).Include(t => t.Questions).ThenInclude(q =>
+        templateForm = await _db.Templates.Include(t => t.Comments).ThenInclude(c =>
+        c.User).Include(t => t.Topic).Include(t => t.Tags).Include(t =>
+        t.Questions).ThenInclude(q =>
         q.Options).AsSplitQuery().FirstAsync(t => t.Id == filledForm.TemplateId);
 
         await base.OnInitializedAsync();

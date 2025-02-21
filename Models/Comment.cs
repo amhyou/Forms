@@ -8,6 +8,8 @@ public class Comment
     [Key]
     public int Id { get; set; }
 
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     public int TemplateId { get; set; }
     public Template? Template { get; set; }
 

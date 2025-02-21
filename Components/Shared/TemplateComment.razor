@@ -1,0 +1,94 @@
+@inject ApplicationDbContext _db
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CommentService CommentService
+
+<div class="comments-section">
+    <h4>Comments:</h4>
+    @if (templateForm.Comments.Any())
+    {
+
+        <ul class="list-group">
+            @foreach (var comment in templateForm.Comments)
+            {
+                <li class="list-group-item">
+                    <strong>@comment.User?.Email:</strong> @comment.Text
+                    <br />
+                    <small class="text-muted">@comment.CreatedAt.ToString("g")</small>
+                </li>
+            }
+        </ul>
+    }
+    @if (isAuthenticated)
+    {
+        <div class="add-comment mt-3">
+            <textarea @bind="@newCommentText" class="form-control" placeholder="Write a comment..."></textarea>
+            <button @onclick="@SubmitComment" class="btn btn-primary mt-2">Post Comment</button>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">You must be logged in to post a comment.</p>
+    }
+</div>
+
+@code {
+    [Parameter] public Template templateForm { get; set; } = new();
+
+    [Parameter] public bool isAuthenticated { get; set; } = false;
+
+    private string newCommentText = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        CommentService.OnCommentAdded += HandleNewComment;
+    }
+
+    private void HandleNewComment(Comment newComment)
+    {
+        if (newComment.TemplateId == templateForm.Id && !templateForm.Comments.Contains(newComment))
+        {
+            templateForm.Comments.Add(newComment);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task SubmitComment()
+    {
+        if (string.IsNullOrWhiteSpace(newCommentText))
+        {
+            Console.WriteLine("Comment cannot be empty.");
+            return;
+        }
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is { IsAuthenticated: false })
+        {
+            Console.WriteLine("User must be authenticated.");
+            return;
+        }
+        var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+
+        var newComment = new Comment
+        {
+            TemplateId = templateForm.Id,
+            UserId = userId,
+            Text = newCommentText,
+        };
+
+        if (!templateForm.Comments.Contains(newComment))
+        {
+            templateForm.Comments.Add(newComment);
+            await _db.SaveChangesAsync();
+            await CommentService.AddComment(newComment);
+            newCommentText = string.Empty;
+        }
+    }
+
+    public void Dispose()
+    {
+        CommentService.OnCommentAdded -= HandleNewComment;
+        _db.Dispose();
+    }
+}

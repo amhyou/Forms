@@ -1,32 +1,22 @@
+using forms.Models;
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Concurrent;
+using forms.Hubs;
 
 namespace forms.Services;
 
 public class CommentService
 {
     private readonly IHubContext<CommentHub> _hubContext;
-    private static readonly ConcurrentDictionary<string, List<string>> _comments = new();
-
-    public event Action<string>? OnCommentAdded;
+    public event Action<Comment>? OnCommentAdded;
 
     public CommentService(IHubContext<CommentHub> hubContext)
     {
         _hubContext = hubContext;
     }
 
-    public async Task AddComment(string postId, string user, string message)
+    public async Task AddComment(Comment newComment)
     {
-        if (!_comments.ContainsKey(postId))
-            _comments[postId] = new List<string>();
-
-        _comments[postId].Add($"{user}: {message}");
-
-        // Notify all connected clients in this post group
-        await _hubContext.Clients.Group(postId).SendAsync("ReceiveComment", user, message);
-
-        OnCommentAdded?.Invoke(postId);
+        await _hubContext.Clients.Group(newComment.TemplateId.ToString()).SendAsync("SendComment", newComment);
+        OnCommentAdded?.Invoke(newComment);
     }
-
-    public List<string> GetComments(string postId) => _comments.GetValueOrDefault(postId) ?? new();
 }

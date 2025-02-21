@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
 using forms.Services;
+using forms.Models;
+
+namespace forms.Hubs;
 
 public class CommentHub : Hub
 {
@@ -10,8 +13,8 @@ public class CommentHub : Hub
         _commentService = commentService;
     }
 
-    public async Task SendComment(string postId, string user, string message)
+    public async Task SendComment(Comment newComment)
     {
-        await _commentService.AddComment(postId, user, message);
+        await _commentService.AddComment(newComment);
     }
 }

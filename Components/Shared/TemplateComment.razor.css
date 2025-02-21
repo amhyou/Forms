@@ -1,0 +1,90 @@
+/* Comments Section Styling */
+.comments-section {
+    max-width: 800px;
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Comments Header */
+.comments-section h3 {
+    font-size: 1.5rem;
+    color: #333;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* Comment List */
+.list-group {
+    padding: 0;
+}
+
+.list-group-item {
+    background: white;
+    border: none;
+    border-bottom: 1px solid #ddd;
+    padding: 15px;
+    transition: background 0.3s ease-in-out;
+}
+
+.list-group-item:hover {
+    background: #f1f1f1;
+}
+
+/* Username Styling */
+.list-group-item strong {
+    color: #007bff;
+    font-size: 1rem;
+}
+
+/* Comment Date */
+.list-group-item small {
+    display: block;
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* No Comments Message */
+.comments-section p {
+    color: #666;
+    font-style: italic;
+}
+
+/* Add Comment Box */
+.add-comment {
+    margin-top: 20px;
+}
+
+.add-comment textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    resize: none;
+    transition: border-color 0.3s ease-in-out;
+}
+
+.add-comment textarea:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* Submit Button */
+.add-comment .btn-primary {
+    padding: 10px 15px;
+    font-size: 1rem;
+    border-radius: 5px;
+    transition: background 0.3s ease-in-out;
+}
+
+.add-comment .btn-primary:hover {
+    background: #0056b3;
+}
