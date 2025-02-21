@@ -27,6 +27,13 @@
                     }
 
                 </div>
+                <div class="d-flex align-items-center mt-2">
+                    <button disabled="@(!isAuthenticated)" @onclick="LikeTemplate"
+                        class="btn btn-sm btn-outline-primary me-2">
+                        <i class="oi oi-thumb-up"></i> Like
+                    </button>
+                    <span>Likes: @templateForm.Likes.Count</span>
+                </div>
             </div>
         </div>
     </div>
@@ -156,6 +163,29 @@
 
         showConfirmation = true;
         showValidationErrors = false;
+    }
+
+    private async Task LikeTemplate()
+    {
+        var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        if (user.Identity is { IsAuthenticated: false })
+        {
+            Console.WriteLine("have to be authentificated first");
+            return;
+        }
+        var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        var appUser = await _db.Users.Where(u => u.Id == userId).FirstAsync();
+        if (!templateForm.Likes.Contains(appUser))
+        {
+            templateForm.Likes.Add(appUser);
+            await _db.SaveChangesAsync();
+        }
+        else
+        {
+            Console.WriteLine("Already liked this template");
+            return;
+        }
     }
 
     private void NavigateToEditForm()
