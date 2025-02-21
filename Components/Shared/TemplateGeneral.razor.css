@@ -1,0 +1,23 @@
+.suggestions-list {
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    margin-top: 4px;
+    margin-bottom: 2px;
+    padding: 0;
+    list-style: none;
+    z-index: 100;
+}
+
+.suggestions-list li {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.suggestions-list li:hover {
+    background-color: #f0f0f0;
+}

@@ -21,6 +21,10 @@
     <Routes />
     <script src="_framework/blazor.web.js"></script>
     <script>
+        function clearInputField(element) {
+            element.value = "";
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             var themeToggle = document.getElementById("themeToggle");
             themeToggle.addEventListener("click", function () {

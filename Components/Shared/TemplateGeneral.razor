@@ -1,5 +1,8 @@
 @inject RedisService RedisService
 @using NRedisStack.Search
+@using StackExchange.Redis
+@inject IJSRuntime JS
+@inject ApplicationDbContext _db
 
 <!-- Quiz Title -->
 <div class="mb-3">
@@ -45,8 +48,17 @@
                     @onclick="@(() => newTemplate.Tags.Remove(tag))"></button>
             </div>
         }
-        <InputText @oninput="HandleTagInput" @bind-value="tagInput" class="form-control border-0 flex-grow-1"
+        <input @ref="inputElement" @oninput="@HandleTagInput" class="form-control border-0 flex-grow-1"
             placeholder="Enter tags" />
+        @if (suggestions.Any())
+        {
+            <ul class="suggestions-list">
+                @foreach (var suggestion in suggestions)
+                {
+                    <li @onclick="() => AddTag(suggestion)">@suggestion.Name</li>
+                }
+            </ul>
+        }
     </div>
 </div>
 
@@ -71,16 +83,16 @@
 
     [Parameter] public bool showValidationErrors { get; set; }
 
-    public List<Topic> AvailableTopics { get; set; } = new();
+    private List<Topic> AvailableTopics = new();
 
-    private string tagInput { get; set; } = string.Empty;
+    private ElementReference inputElement;
 
+    private List<Tag> suggestions = new();
 
     protected override async Task OnInitializedAsync()
     {
         var ft = RedisService.GetSearch();
-        var topics = ft.Search("idx_topics", new Query("*").Limit(0, 10));
-
+        var topics = ft.Search("idx_topics", new Query("*"));
         AvailableTopics = topics.Documents.Select(d => new Topic { Name = d["Name"].ToString(), Id = int.Parse(d["Id"]!) }
         ).ToList();
 
@@ -94,19 +106,73 @@
         OnImageChanged.InvokeAsync(templateImage);
     }
 
-    private void HandleTagInput(ChangeEventArgs e)
+    private async Task HandleTagInput(ChangeEventArgs e)
     {
-        string inputValue = e.Value!.ToString()!;
+        string inputValue = e.Value?.ToString() ?? string.Empty;
 
-        if (!string.IsNullOrWhiteSpace(inputValue) && inputValue.EndsWith(" "))
+        if (string.IsNullOrWhiteSpace(inputValue))
+        {
+            suggestions.Clear();
+        }
+        else if (inputValue.EndsWith(" "))
         {
             string tag = inputValue.Trim();
-            if (!newTemplate.Tags.Select(t => t.Name).Contains(tag))
+
+            var ft = RedisService.GetSearch();
+            var tags = ft.Search("idx_tags", new Query($"@Name:{{*{tag}*}}"));
+            var existingTag = tags.Documents.Select(d => new Tag { Name = d["Name"].ToString(), Id = int.Parse(d["Id"]!) }
+            ).FirstOrDefault();
+
+            if (existingTag != null)
             {
-                newTemplate.Tags.Add(new Tag { Name = tag });
-                tagInput = string.Empty;
-                StateHasChanged();
+                await AddTag(existingTag);
+            }
+            else
+            {
+                await AddNewTag(tag);
             }
         }
+        else
+        {
+            var ft = RedisService.GetSearch();
+            var tags = ft.Search("idx_tags", new Query($"@Name:{{*{inputValue}*}}"));
+            suggestions = tags.Documents.Select(d => new Tag { Name = d["Name"].ToString(), Id = int.Parse(d["Id"]!) }
+            ).ToList();
+        }
     }
+
+    private async Task AddTag(Tag tag)
+    {
+        Console.WriteLine("adding existing tag ...");
+        if (!newTemplate.Tags.Any(t => t.Name == tag.Name))
+        {
+            newTemplate.Tags.Add(tag);
+        }
+        await JS.InvokeVoidAsync("clearInputField", inputElement);
+        await InvokeAsync(StateHasChanged);
+        suggestions.Clear();
+    }
+
+    private async Task AddNewTag(string tag)
+    {
+        Console.WriteLine("adding new tag ...");
+        try
+        {
+            Tag newTag = new Tag { Name = tag };
+            _db.Tags.Add(newTag);
+            await _db.SaveChangesAsync();
+            newTemplate.Tags.Add(newTag);
+            var _dbRedis = RedisService.GetDatabase();
+            await _dbRedis.HashSetAsync($"tag:{newTag.Id}", new HashEntry[] { new("Id", newTag.Id), new("Name", newTag.Name) });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"error when creating tag: {ex.Message}");
+        }
+
+        await JS.InvokeVoidAsync("clearInputField", inputElement);
+        await InvokeAsync(StateHasChanged);
+        suggestions.Clear();
+    }
+
 }
