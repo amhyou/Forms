@@ -4,6 +4,7 @@ using MailKit.Net.Smtp;
 using MimeKit;
 using forms.Data;
 using forms.Models;
+using StackExchange.Redis;
 
 namespace forms.Services;
 
@@ -20,18 +21,23 @@ public class EmailSettings
 public class EmailService : IEmailSender<ApplicationUser>
 {
     private readonly EmailSettings _emailSettings;
+    private readonly RedisService _redis;
 
-    public EmailService(IOptions<EmailSettings> emailSettings)
+    public EmailService(IOptions<EmailSettings> emailSettings, RedisService redisService)
     {
         _emailSettings = emailSettings.Value;
+        _redis = redisService;
     }
 
     public async Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
     {
-        var subject = "Confirm your email";
-        var body = $"Please confirm your email by clicking this link: <a href='{confirmationLink}'>Confirm</a>";
+        // var subject = "Confirm your email";
+        // var body = $"Please confirm your email by clicking this link: <a href='{confirmationLink}'>Confirm</a>";
 
-        await SendEmailAsync(email, subject, body);
+        // await SendEmailAsync(email, subject, body);
+
+        var _dbRedis = _redis.GetDatabase();
+        await _dbRedis.HashSetAsync($"user:{user.Id}", new HashEntry[] { new("Id", user.Id), new("Email", user.Email) });
     }
 
     public async Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode)

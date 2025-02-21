@@ -6,7 +6,10 @@
 
 <AuthorizeView>
     <Authorized>
-        <ControlTemplate newTemplate="newTemplate" />
+        @if (userAuthorized)
+        {
+            <ControlTemplate newTemplate="newTemplate" />
+        }
     </Authorized>
     <NotAuthorized>
         <h1>Need to authentify first</h1>
@@ -19,15 +22,32 @@
 
     public Template newTemplate = new();
 
+    private bool userAuthorized = false;
+
 
     protected override async Task OnInitializedAsync()
     {
         var templateId = LinkService.DecryptId(HashId!);
 
-        newTemplate = await _db.Templates.Include(t => t.Topic).Include(t => t.Tags).Include(t => t.Questions).ThenInclude(q =>
-        q.Options).FirstAsync(t => t.Id == templateId);
+        var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        var isAuthenticated = user.Identity is { IsAuthenticated: true };
 
-        // template should be edited with Admin or Creator of the template
+        if (!isAuthenticated)
+        {
+            return;
+        }
+        var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+
+        newTemplate = await _db.Templates.Include(t => t.Topic).Include(t => t.Tags).Include(t => t.Questions).ThenInclude(q =>
+        q.Options).Include(t => t.AllowedUsers).FirstAsync(t => t.Id == templateId);
+
+
+        if (userId == newTemplate.CreatorId)
+        {
+            userAuthorized = true;
+        }
+        Console.WriteLine($"Current user is Authorized : {userAuthorized}");
 
         await base.OnInitializedAsync();
     }

@@ -72,7 +72,7 @@
     </InputSelect>
 </div>
 
-
+<TemplatePrivacy newTemplate="newTemplate" />
 
 @code {
     [Parameter] public Template newTemplate { get; set; } = new();
@@ -158,6 +158,7 @@
         Console.WriteLine("adding new tag ...");
         try
         {
+
             Tag newTag = new Tag { Name = tag };
             _db.Tags.Add(newTag);
             await _db.SaveChangesAsync();

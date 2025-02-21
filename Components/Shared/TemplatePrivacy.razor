@@ -1,11 +1,14 @@
+@inject RedisService RedisService
+@using NRedisStack.Search
+@inject IJSRuntime JS
 @inject ApplicationDbContext _db
-@using Microsoft.EntityFrameworkCore
 
 <div class="mb-3">
-    <label class="form-label">Quiz Visibility</label>
-    <div class="form-check form-switch"> @* Use form-switch for a nicer switch *@
+    <div class="form-check form-switch">
         <InputCheckbox @bind-Value="newTemplate.IsPublic" class="form-check-input" id="isPublicSwitch" />
-        <label class="form-check-label" for="isPublicSwitch">@(newTemplate.IsPublic ? "Public" : "Restricted")</label>
+        <label class="form-check-label" for="isPublicSwitch">Visibility: @(newTemplate.IsPublic ? "Public" :
+                        "Restricted")
+        </label>
     </div>
 </div>
 
@@ -13,28 +16,26 @@
 {
     <div class="mb-3">
         <label class="form-label">Allowed Users</label>
-        <InputText @oninput="HandleUserInput" @bind-Value="userInput" class="form-control" placeholder="Enter username" />
+        <input @ref="@inputElement" @oninput="@HandleUserInput" class="form-control" placeholder="Enter Email" />
 
-        @if (Suggestions.Any()) // Show suggestions if available
+        @if (suggestions.Any())
         {
-            <ul class="list-group mt-2">
-                @foreach (var suggestion in Suggestions)
+            <ul class="suggestions-list">
+                @foreach (var suggestion in suggestions)
                 {
-                    <li class="list-group-item list-group-item-action" @onclick="@(() => AddUser(suggestion))">
-                        @suggestion
-                    </li>
+                    <li @onclick="() => AddUser(suggestion)">@suggestion.Email</li>
                 }
             </ul>
         }
 
-        @if (newTemplate.AllowedUsers.Any()) // Display added users as a list
+        @if (newTemplate.AllowedUsers.Any())
         {
             <ul class="list-group mt-2">
                 @foreach (var user in newTemplate.AllowedUsers)
                 {
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        @user
-                        <button type="button" class="btn-close btn-close-white" @onclick="@(() => RemoveUser(user))"></button>
+                        @user.Email
+                        <button type="button" class="btn-close btn-close-white" @onclick="@(() => RemoveUser(user.Id))"></button>
                     </li>
                 }
             </ul>
@@ -43,48 +44,62 @@
     </div>
 }
 @code {
-    [Parameter]
-    public Template newTemplate { get; set; } = new();
+    [Parameter] public Template newTemplate { get; set; } = new();
 
-    private List<ApplicationUser> Suggestions = new();
-    private List<ApplicationUser> AllUsers = new();
+    private List<SuggestedUser> suggestions = new();
 
-    private string userInput = "";
+    private ElementReference inputElement;
 
-    protected override async Task OnInitializedAsync()
+    class SuggestedUser
     {
-        AllUsers = await _db.Users.ToListAsync();
-        await base.OnInitializedAsync();
+        public string? Id;
+        public string? Email;
     }
 
-
-    private void RemoveUser(ApplicationUser userToRemove)
+    private void RemoveUser(string userId)
     {
-        newTemplate.AllowedUsers.Remove(userToRemove);
+        Console.WriteLine("removing user from allowed users ...");
+        newTemplate.AllowedUsers.RemoveAll(u => u.Id == userId);
     }
 
     private void HandleUserInput(ChangeEventArgs e)
     {
-        string? inputValue = e.Value?.ToString();
-        userInput = inputValue ?? "";
+        string inputValue = e.Value?.ToString() ?? string.Empty;
 
-        if (!string.IsNullOrWhiteSpace(inputValue))
+        if (string.IsNullOrWhiteSpace(inputValue))
         {
-            Suggestions = AllUsers.Where(u => u.UserName!.Contains(inputValue, StringComparison.OrdinalIgnoreCase)).ToList();
+            suggestions.Clear();
         }
         else
         {
-            Suggestions.Clear();
+            var ft = RedisService.GetSearch();
+            var users = ft.Search("idx_users", new Query($"{inputValue}*"));
+            suggestions = users.Documents.Select(d => new SuggestedUser
+            {
+                Email = d["Email"].ToString(),
+                Id = d["Id"].ToString()
+            }).ToList();
+            Console.WriteLine(suggestions.FirstOrDefault()?.Email);
         }
     }
 
-    private void AddUser(ApplicationUser user)
+    private async Task AddUser(SuggestedUser sUser)
     {
-        if (!newTemplate.AllowedUsers.Contains(user))
+        Console.WriteLine("adding user to allowed users ...");
+        if (!newTemplate.AllowedUsers.Any(u => u.Id == sUser.Id))
         {
-            newTemplate.AllowedUsers.Add(user);
-            userInput = ""; // Clear input field
-            Suggestions.Clear(); // Clear suggestions
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == sUser.Id);
+            if (user != null)
+            {
+                newTemplate.AllowedUsers.Add(user);
+            }
+            else
+            {
+                Console.WriteLine("user not found in database");
+            }
         }
+        await JS.InvokeVoidAsync("clearInputField", inputElement);
+        await InvokeAsync(StateHasChanged);
+        suggestions.Clear();
     }
 }

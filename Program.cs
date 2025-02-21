@@ -47,6 +47,12 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+builder.Services.AddSingleton(sp =>
+{
+    var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+    return new RedisService(redisConnection);
+});
+
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailService>();
 
@@ -58,11 +64,6 @@ builder.Services.AddSingleton<LinkService>();
 
 builder.Services.AddSingleton<CommentService>();
 
-builder.Services.AddSingleton(sp =>
-{
-    var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
-    return new RedisService(redisConnection);
-});
 
 var app = builder.Build();
 

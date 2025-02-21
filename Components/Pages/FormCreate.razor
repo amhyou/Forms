@@ -4,29 +4,37 @@
 @inject ApplicationDbContext _db
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
+@if (userAuthorized)
+{
+    <ControlForm templateForm="templateForm" newForm="newForm" isAuthenticated="isAuthenticated" />
+}
 
-<ControlForm templateForm="templateForm" newForm="newForm" isAuthenticated="isAuthenticated" />
 
 @code {
     [Parameter] public string? HashId { get; set; }
     public Template templateForm { get; set; } = new();
     public forms.Models.Form newForm { get; set; } = new();
     public bool isAuthenticated { get; set; } = false;
+    private bool userAuthorized { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
         var templateId = LinkService.DecryptId(HashId!);
 
-        templateForm = await _db.Templates.Include(t => t.Comments).ThenInclude(c =>
-        c.User).Include(t => t.Likes).Include(t => t.Topic).Include(t => t.Tags).Include(t =>
-        t.Questions).ThenInclude(q =>
-        q.Options).AsSplitQuery().FirstAsync(t => t.Id == templateId);
-
         var authstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authstate.User;
         isAuthenticated = user.Identity is { IsAuthenticated: true };
 
+        if (!isAuthenticated)
+        {
+            return;
+        }
         var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+
+        templateForm = await _db.Templates.Include(t => t.Comments).ThenInclude(c =>
+        c.User).Include(t => t.Likes).Include(t => t.Topic).Include(t => t.Tags).Include(t =>
+        t.Questions).ThenInclude(q =>
+        q.Options).AsSplitQuery().FirstAsync(t => t.Id == templateId);
 
         newForm.TemplateId = templateId;
         newForm.AuthorId = userId;
@@ -35,6 +43,21 @@
             QuestionId = q.Id,
             Answer = string.Empty
         }).ToList()!;
+
+        if (userId == templateForm?.CreatorId)
+        {
+            userAuthorized = true;
+        }
+        else if (templateForm != null && templateForm.IsPublic)
+        {
+            userAuthorized = true;
+        }
+        else if (templateForm != null && !templateForm.IsPublic)
+        {
+            userAuthorized = await _db.Templates.Where(t => t.Id == templateForm.Id).SelectMany(t => t.AllowedUsers).AnyAsync(u =>
+            u.Id == userId);
+        }
+        Console.WriteLine($"Current user is Authorized : {userAuthorized}");
 
         await base.OnInitializedAsync();
     }
