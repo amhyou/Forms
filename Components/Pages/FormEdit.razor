@@ -29,11 +29,29 @@
         }
         var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
 
-        filledForm = await _db.Forms.Include(f => f.Responses).FirstAsync(f => f.Id == formId);
+        filledForm = await _db.Forms.FirstAsync(f => f.Id == formId);
+
         templateForm = await _db.Templates.Include(t => t.Comments).ThenInclude(c =>
         c.User).Include(t => t.Likes).Include(t => t.Topic).Include(t => t.Tags).Include(t =>
         t.Questions).ThenInclude(q =>
         q.Options).AsSplitQuery().FirstAsync(t => t.Id == filledForm.TemplateId);
+
+        var templateQuestionIds = templateForm.Questions.OrderBy(q => q.Order).Select(q => q.Id).ToList();
+        var existingResponses = await _db.Responses.Where(r => r.FormId == filledForm.Id &&
+        templateQuestionIds.Contains(r.QuestionId)).ToListAsync();
+
+        var responseDict = existingResponses.ToDictionary(r => r.QuestionId);
+
+        filledForm.Responses = templateQuestionIds
+        .Select(qId => responseDict.ContainsKey(qId)
+        ? responseDict[qId]
+        : new Response
+        {
+            FormId = filledForm.Id,
+            QuestionId = qId,
+            Answer = string.Empty
+        })
+        .ToList();
 
 
         if (userId == filledForm.AuthorId || userId == templateForm.CreatorId)
