@@ -29,11 +29,11 @@ builder.Services.AddAuthentication(options =>
        microsoftOptions.ClientSecret = builder.Configuration.GetValue<string>("AzureAd:ClientSecret")!;
        microsoftOptions.CallbackPath = "/signin-microsoft";
    })
-   .AddTwitter(twitterOptions =>
-    {
-        twitterOptions.ConsumerKey = builder.Configuration.GetValue<string>("Twitter:ApiKey")!;
-        twitterOptions.ConsumerSecret = builder.Configuration.GetValue<string>("Twitter:ApiSecret")!;
-    })
+//    .AddTwitter(twitterOptions =>
+//     {
+//         twitterOptions.ConsumerKey = builder.Configuration.GetValue<string>("Twitter:ApiKey")!;
+//         twitterOptions.ConsumerSecret = builder.Configuration.GetValue<string>("Twitter:ApiSecret")!;
+//     })
     .AddIdentityCookies();
 
 
