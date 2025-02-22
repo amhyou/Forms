@@ -1,3 +1,5 @@
+@using StackExchange.Redis
+@inject RedisService RedisService
 @inject ApplicationDbContext _db
 @inject MinioService MinioService
 @inject LinkService LinkService
@@ -157,6 +159,14 @@
         }
         showConfirmation = true;
         showValidationErrors = false;
+
+        var _dbRedis = RedisService.GetDatabase();
+        foreach (var question in newTemplate.Questions)
+        {
+            await _dbRedis.HashSetAsync($"question:{question.Id}", new HashEntry[] { new("Id", newTemplate.Id), new("Value",
+question.Text) }, CommandFlags.FireAndForget);
+        }
+
     }
 
     private void NavigateToEditTemplate()

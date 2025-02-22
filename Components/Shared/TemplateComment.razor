@@ -1,3 +1,5 @@
+@using StackExchange.Redis
+@inject RedisService RedisService
 @inject ApplicationDbContext _db
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject CommentService CommentService
@@ -83,6 +85,10 @@
             await _db.SaveChangesAsync();
             await CommentService.AddComment(newComment);
             newCommentText = string.Empty;
+
+            var _dbRedis = RedisService.GetDatabase();
+            await _dbRedis.HashSetAsync($"comment:{newComment.Id}", new HashEntry[] { new("Id", templateForm.Id), new("Value",
+newComment.Text) }, CommandFlags.FireAndForget);
         }
     }
 

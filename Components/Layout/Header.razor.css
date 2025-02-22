@@ -1,0 +1,37 @@
+/* .search-container {
+    position: relative;
+    width: 100%;
+    margin: auto;
+} */
+
+.search-input {
+    width: 100%;
+}
+
+.suggestions-list {
+    position: absolute;
+    top: 80%;
+    left: 0px;
+    right: 210px;
+    max-height: 200px;
+    max-width: 650px;
+    margin: auto;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding: 0;
+    list-style: none;
+    z-index: 1000;
+}
+
+.suggestions-list li {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.suggestions-list li:hover {
+    background-color: #f0f0f0;
+}

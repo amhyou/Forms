@@ -1,15 +1,31 @@
 @using Microsoft.AspNetCore.Components.Authorization
+@using NRedisStack.Search
+@using StackExchange.Redis
+@inject RedisService RedisService
+@inject IJSRuntime JS
+@inject LinkService LinkService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 <!-- Header Component -->
 <div class="navbar navbar-expand-lg navbar-light bg-light p-3">
-    <div class="container-fluid">
+    <div class="container-fluid search-container">
         <button class="btn btn-outline-secondary me-3" id="themeToggle">Toggle Theme</button>
-        <form class="d-flex mx-auto" style="width: 50%;">
-            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <form class="d-flex mx-auto search-form" style="width: 50%;">
+            <input @ref="inputElement" @oninput="@HandleTagInput" class="form-control me-2 search-input" type="search"
+                placeholder="Search" aria-label="Search">
             <button class="btn btn-outline-primary" type="submit">Search</button>
         </form>
+        <br />
+        @if (suggestions.Any())
+        {
+            <ul class="suggestions-list">
+                @foreach (var suggestion in suggestions)
+                {
+                    <li @onclick="() => SearchTemplate(suggestion)">@suggestion.Value</li>
+                }
+            </ul>
+        }
         <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
@@ -37,6 +53,49 @@
 
 @code {
     private string? currentUrl;
+
+    private ElementReference inputElement;
+
+    private List<SearchItem> suggestions = new();
+
+    class SearchItem
+    {
+        public string? Id;
+        public string? Value;
+    }
+
+
+    private async Task HandleTagInput(ChangeEventArgs e)
+    {
+        string inputValue = e.Value?.ToString() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(inputValue))
+        {
+            await JS.InvokeVoidAsync("clearInputField", inputElement);
+            await InvokeAsync(StateHasChanged);
+            suggestions.Clear();
+        }
+        else
+        {
+            var ft = RedisService.GetSearch();
+            var results = ft.Search("idx_search", new Query($"{inputValue}*"));
+            suggestions = results.Documents.Select(d => new SearchItem
+            {
+                Value = d["Value"].ToString(),
+                Id = d["Id"].ToString()
+            }).ToList();
+            Console.WriteLine(suggestions.FirstOrDefault()?.Value);
+        }
+    }
+
+    private async Task SearchTemplate(SearchItem searchItem)
+    {
+        await JS.InvokeVoidAsync("clearInputField", inputElement);
+        await InvokeAsync(StateHasChanged);
+        suggestions.Clear();
+        var encryptedId = LinkService.EncryptId(int.Parse(searchItem.Id!));
+        Navigation.NavigateTo($"/Form/{encryptedId}", forceLoad: true);
+    }
 
     protected override void OnInitialized()
     {
