@@ -1,0 +1,31 @@
+@page "/Search"
+@rendermode InteractiveServer
+@inject ApplicationDbContext _db
+@inject LinkService LinkService
+@inject NavigationManager Navigation
+
+<div class="template-list-wrapper">
+    @foreach (var template in templateList)
+    {
+        <a href="/Form/@(LinkService.EncryptId(template.Id))" class="card-link">
+            <TemplateCard Item="template" />
+        </a>
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? searchQuery { get; set; }
+
+    private List<Template> templateList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        Console.WriteLine(searchQuery);
+
+        templateList = await _db.Templates.OrderByDescending(e => e.CreatedAt).ToListAsync();
+    }
+}

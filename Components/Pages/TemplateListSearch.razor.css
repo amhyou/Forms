@@ -1,0 +1,72 @@
+.template-list-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: baseline;
+    padding: 20px;
+    overflow-x: auto;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.template-list-wrapper p {
+    text-align: center;
+    font-style: italic;
+    color: #888;
+}
+
+
+.card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+
+/*    */
+
+.card-link .template-card {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.card-link:hover .template-card {
+    transform: scale(1.01);
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+.create-card {
+    background-color: #f8f8f8;
+    border: 1px dashed #ccc;
+    cursor: pointer;
+}
+
+.create-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.plus-icon {
+    width: 100px;
+    height: 100px;
+    border: 2px solid #888;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    border-radius: 3px;
+}

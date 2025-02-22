@@ -72,8 +72,11 @@
         }
         else
         {
+            var words = inputValue.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(word => $"{word}*");
+            string redisQuery = string.Join(" ", words);
+
             var ft = RedisService.GetSearch();
-            var users = ft.Search("idx_users", new Query($"{inputValue}*"));
+            var users = ft.Search("idx_users", new Query(redisQuery));
             suggestions = users.Documents.Select(d => new SuggestedUser
             {
                 Email = d["Email"].ToString(),

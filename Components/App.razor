@@ -24,14 +24,9 @@
         function clearInputField(element) {
             element.value = "";
         }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            var themeToggle = document.getElementById("themeToggle");
-            themeToggle.addEventListener("click", function () {
-                document.body.classList.toggle("bg-dark");
-                document.body.classList.toggle("text-white");
-            });
-        });
+        window.getInputValue = (element) => {
+            return element.value;
+        }
     </script>
 </body>
 

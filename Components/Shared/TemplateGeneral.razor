@@ -3,9 +3,8 @@
 @using StackExchange.Redis
 @inject ApplicationDbContext _db
 
-<!-- Quiz Title -->
 <div class="mb-3">
-    <label class="form-label">Quiz Title</label>
+    <label class="form-label">Template Title</label>
     <input @bind-value="newTemplate.Title" type="text"
         class="@($"form-control {(string.IsNullOrEmpty(newTemplate.Title) && showValidationErrors ? "invalid-field" : "")}")"
         placeholder="Enter quiz title" aria-required="true" />
@@ -15,9 +14,9 @@
     }
 </div>
 
-<!-- Quiz Description -->
+
 <div class="mb-3">
-    <label class="form-label">Quiz Description</label>
+    <label class="form-label">Template Description</label>
     <textarea @bind="newTemplate.Description"
         class="@($"form-control {(string.IsNullOrEmpty(newTemplate.Description) && showValidationErrors ? "invalid-field" : "")}")"
         rows="3" placeholder="Enter quiz description" aria-required="true"></textarea>
@@ -28,7 +27,7 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Quiz Image</label>
+    <label class="form-label">Template Image</label>
     <InputFile OnChange="@HandleImageSelected" accept="image/*" class="form-control" />
     @if (newTemplate.ImageUrl != null)
     {

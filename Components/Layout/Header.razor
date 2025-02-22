@@ -1,6 +1,5 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using NRedisStack.Search
-@using StackExchange.Redis
 @inject RedisService RedisService
 @inject IJSRuntime JS
 @inject LinkService LinkService
@@ -10,8 +9,9 @@
 <!-- Header Component -->
 <div class="navbar navbar-expand-lg navbar-light bg-light p-3">
     <div class="container-fluid search-container">
-        <button class="btn btn-outline-secondary me-3" id="themeToggle">Toggle Theme</button>
-        <form class="d-flex mx-auto search-form" style="width: 50%;">
+        <button class="btn btn-outline-secondary me-3" @onclick="@NavigateToMySpace">My
+            Space</button>
+        <form class="d-flex mx-auto search-form" style="width: 50%;" @onsubmit="HandleSearch">
             <input @ref="inputElement" @oninput="@HandleTagInput" class="form-control me-2 search-input" type="search"
                 placeholder="Search" aria-label="Search">
             <button class="btn btn-outline-primary" type="submit">Search</button>
@@ -77,8 +77,11 @@
         }
         else
         {
+            var words = inputValue.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(word => $"{word}*");
+            string redisQuery = string.Join(" ", words);
+
             var ft = RedisService.GetSearch();
-            var results = ft.Search("idx_search", new Query($"{inputValue}*"));
+            var results = ft.Search("idx_search", new Query(redisQuery));
             suggestions = results.Documents.Select(d => new SearchItem
             {
                 Value = d["Value"].ToString(),
@@ -95,6 +98,21 @@
         suggestions.Clear();
         var encryptedId = LinkService.EncryptId(int.Parse(searchItem.Id!));
         Navigation.NavigateTo($"/Form/{encryptedId}", forceLoad: true);
+    }
+
+    private async Task HandleSearch(EventArgs e)
+    {
+        var searchQuery = await JS.InvokeAsync<string>("getInputValue", inputElement);
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            Navigation.NavigateTo($"/Search?q={searchQuery}");
+        }
+    }
+
+    private void NavigateToMySpace()
+    {
+        Navigation.NavigateTo("/MySpace", forceLoad: true);
     }
 
     protected override void OnInitialized()
