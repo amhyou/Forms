@@ -44,22 +44,19 @@
                 }
                 else if (Tab == 2)
                 {
-                    <h4 class="text-primary">Privacy settings</h4>
-                    <div class="container mt-4">
-                        <p>Content for Tab 2</p>
-                    </div>
+                    @* <h4 class="text-primary">Results</h4> *@
+                    <TemplateResult templateId="newTemplate.Id" />
                 }
                 else if (Tab == 3)
                 {
-                    <h4 class="text-primary">Aggregations</h4>
-                    <div class="container mt-4">
-                        <p>Content for Tab 3</p>
-                    </div>
+                    @* <h4 class="text-primary">Aggregations</h4> *@
+                    <ResponseAggregation templateQuestions="newTemplate.Questions" />
                 }
-
-                <button @onclick="SaveTemplate" type="button" class="btn btn-primary w-100 mt-3">Save
-                    Template</button>
-
+                @if (Tab == 0 || Tab == 1)
+                {
+                    <button @onclick="SaveTemplate" type="button" class="btn btn-primary w-100 mt-3">Save
+                        Template</button>
+                }
             </div>
         </div>
 

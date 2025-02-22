@@ -1,0 +1,117 @@
+@inject ApplicationDbContext _db
+
+
+<div class="container mt-4">
+    <h3 class="text-center mb-4">Survey Results</h3>
+
+    @foreach (var question in templateQuestions)
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <strong>@question.Text</strong>
+            </div>
+            <div class="card-body">
+                @if (aggregatedResults.ContainsKey(question.Id))
+                {
+                    var result = aggregatedResults[question.Id];
+
+                    @if (question.Type == QuestionType.Integer)
+                    {
+                        var stats = (dynamic)result;
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>Responses:</strong> @stats.Count</li>
+                            <li class="list-group-item"><strong>Min:</strong> @(stats.Min ?? "N/A")</li>
+                            <li class="list-group-item"><strong>Max:</strong> @(stats.Max ?? "N/A")</li>
+                            <li class="list-group-item"><strong>Average:</strong> @(stats.Average?.ToString("0.##") ?? "N/A")</li>
+                        </ul>
+                    }
+                    else if (question.Type == QuestionType.Checkbox)
+                    {
+                        var percentages = (Dictionary<string, double>)result;
+                        <div class="progress-container">
+                            @foreach (var option in percentages)
+                            {
+                                <div class="mb-2">
+                                    <span>@option.Key (@option.Value%)</span>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: @option.Value%;"
+                                            aria-valuenow="@option.Value" aria-valuemin="0" aria-valuemax="100">@option.Value%</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        var responsesList = (List<string>)result;
+                        <ul class="list-group">
+                            @foreach (var response in responsesList)
+                            {
+                                <li class="list-group-item">@response</li>
+                            }
+                        </ul>
+                    }
+                }
+                else
+                {
+                    <p>No responses available.</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter] public List<Question> templateQuestions { get; set; } = new();
+
+    private Dictionary<int, object> aggregatedResults = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var questionIds = templateQuestions.Where(q => q.Id != default).Select(q => q.Id).ToList();
+
+        var responses = await _db.Responses.Where(r => questionIds.Contains(r.QuestionId)).ToListAsync();
+
+        aggregatedResults = templateQuestions.ToDictionary(
+        question => question.Id,
+        question => ProcessResponses(question, responses.Where(r => r.QuestionId == question.Id).ToList())
+        );
+    }
+
+    private object ProcessResponses(Question question, List<Response> responses)
+    {
+        if (question.Type == QuestionType.Integer)
+        {
+            var numericResponses = responses
+            .Select(r => int.TryParse(r.Answer, out int value) ? value : (int?)null)
+            .Where(value => value.HasValue)
+            .Select(value => value!.Value)
+            .ToList();
+
+            return new
+            {
+                Count = numericResponses.Count,
+                Min = numericResponses.Any() ? numericResponses.Min() : (int?)null,
+                Max = numericResponses.Any() ? numericResponses.Max() : (int?)null,
+                Average = numericResponses.Any() ? numericResponses.Average() : (double?)null
+            };
+        }
+        else if (question.Type == QuestionType.Checkbox)
+        {
+            var optionCounts = responses
+            .Where(r => !string.IsNullOrEmpty(r.Answer))
+            .GroupBy(r => r.Answer ?? "Unknown")
+            .ToDictionary(g => g.Key!, g => g.Count());
+
+            int totalResponses = responses.Count;
+            var optionPercentages = optionCounts
+            .ToDictionary(kvp => kvp.Key, kvp => Math.Round((double)kvp.Value / totalResponses * 100, 2));
+
+            return optionPercentages;
+        }
+
+        return responses.Select(r => r.Answer ?? "No Answer").ToList();
+    }
+
+}

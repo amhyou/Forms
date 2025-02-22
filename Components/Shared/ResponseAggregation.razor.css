@@ -1,0 +1,13 @@
+.progress-container {
+    margin-top: 10px;
+}
+
+.progress {
+    height: 25px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    font-weight: bold;
+    line-height: 25px;
+}
