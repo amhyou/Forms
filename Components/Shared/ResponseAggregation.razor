@@ -73,7 +73,7 @@
 
         var responses = await _db.Responses.Where(r => questionIds.Contains(r.QuestionId)).ToListAsync();
 
-        aggregatedResults = templateQuestions.ToDictionary(
+        aggregatedResults = templateQuestions.Where(q => q.Id != default).ToDictionary(
         question => question.Id,
         question => ProcessResponses(question, responses.Where(r => r.QuestionId == question.Id).ToList())
         );

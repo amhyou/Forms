@@ -35,7 +35,9 @@
                 {
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         @user.Email
-                        <button type="button" class="btn-close btn-close-white" @onclick="@(() => RemoveUser(user.Id))"></button>
+                        <button type="button" class="btn-close" @onclick="@(() => RemoveUser(user.Id))">
+                            <i class="oi oi-trash"></i>
+                        </button>
                     </li>
                 }
             </ul>

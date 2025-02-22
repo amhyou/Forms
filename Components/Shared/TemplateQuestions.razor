@@ -30,7 +30,7 @@
                         <div class="input-group mb-2">
                             <input type="text" class="form-control" placeholder="Option" @bind-value="option.Option">
                             <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveOption(newQuestion, option)">
-                                <i class="oi oi-minus"></i>
+                                <i class="oi oi-minus">Delete</i>
                             </button>
                         </div>
                     }
@@ -40,11 +40,13 @@
             }
 
 
-
-            <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" type="button"
-                @onclick="() => RemoveQuestion(newQuestion)">
-                <i class="oi oi-trash"></i>
-            </button>
+            @if (newTemplate.Questions.Count != 1)
+            {
+                <button class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-2" type="button"
+                    @onclick="() => RemoveQuestion(newQuestion)">
+                    <i class="oi oi-trash">Remove</i>
+                </button>
+            }
 
         </div>
 
