@@ -123,7 +123,7 @@ public class EmailService : IEmailSender<ApplicationUser>
         try
         {
             Console.WriteLine($"Attempting to send email to {email} ...");
-            await client.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.SmtpPort, MailKit.Security.SecureSocketOptions.SslOnConnect);
+            await client.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.SmtpPort, MailKit.Security.SecureSocketOptions.StartTls);
             await client.AuthenticateAsync(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
             await client.SendAsync(emailMessage);
             Console.WriteLine($"Email sent successfully to {email}");
