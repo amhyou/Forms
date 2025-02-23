@@ -45,10 +45,11 @@ else
         {
             userAuthorized = true;
         }
-        else if (!templateForm.IsPublic && isAuthenticated)
+        else if (isAuthenticated)
         {
             var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
-            userAuthorized = await _db.Templates.Where(t => t.Id == templateForm.Id).SelectMany(t => t.AllowedUsers).AnyAsync(u =>
+            userAuthorized = templateForm.CreatorId == userId || await _db.Templates.Where(t => t.Id ==
+            templateForm.Id).SelectMany(t => t.AllowedUsers).AnyAsync(u =>
             u.Id == userId);
         }
         Console.WriteLine($"Current user is Authorized : {userAuthorized}");
