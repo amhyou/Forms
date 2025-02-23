@@ -23,6 +23,9 @@
         window.getInputValue = (element) => {
             return element.value;
         }
+        window.stopPropagation = (element, event) => {
+            event.stopPropagation();
+        };
     </script>
 </body>
 

@@ -1,12 +1,34 @@
-<div class="card template-card mb-3"> @* Added template-card class *@
-    <div class="card-content"> @* Added card-content wrapper *@
-        @if (!string.IsNullOrEmpty(Item.ImageUrl))
+@inject IJSRuntime JS
+@inject LinkService LinkService
+@inject NavigationManager Navigation
+
+<div class="card template-card mb-3">
+    <div class="card-content">
+        @if (mySpace)
         {
-            <img src="@Item.ImageUrl" class="card-img-top" alt="@Item.Title"> @* Image on top *@
+            <a href="/EditTemplate/@(LinkService.EncryptId(Item.Id))" class="card-link">
+                @if (!string.IsNullOrEmpty(Item.ImageUrl))
+                {
+                    <img src="@Item.ImageUrl" class="card-img-top" alt="@Item.Title">
+                }
+                else
+                {
+                    <div class="card-img-placeholder"></div>
+                }
+            </a>
         }
         else
         {
-            <div class="card-img-placeholder"></div>
+            <a href="/Form/@(LinkService.EncryptId(Item.Id))" class="card-link">
+                @if (!string.IsNullOrEmpty(Item.ImageUrl))
+                {
+                    <img src="@Item.ImageUrl" class="card-img-top" alt="@Item.Title">
+                }
+                else
+                {
+                    <div class="card-img-placeholder"></div>
+                }
+            </a>
         }
         <div class="card-body">
             <h5 class="card-title">@Item.Title</h5>
@@ -20,8 +42,8 @@
                     @Item.Description
                 }
             </p>
-            <div class="mt-auto"> @* Push footer to bottom *@
-                @if (Item.Tags.Any())
+            <div class="mt-auto">
+                @* @if (Item.Tags.Any())
                 {
                     <div class="mb-2">
                         @foreach (var tag in Item.Tags)
@@ -29,15 +51,29 @@
                             <span class="badge bg-primary me-1">@tag.Name</span>
                         }
                     </div>
-                }
-                <p class="card-text small text-muted">Topic: @Item.Topic?.Name</p>
+                } *@
+                @* <p class="card-text small text-muted">Topic: @Item.Topic?.Name</p> *@
                 <div class="d-flex justify-content-between align-items-center">
-                    <p class="card-text small text-muted">Creator: @Item.Creator?.UserName</p>
+                    @* <p class="card-text small text-muted">Creator: @Item.Creator?.UserName</p> *@
 
                     <p class="card-text small text-muted">
                         Created: @Item.CreatedAt
                     </p>
-
+                    @if (mySpace)
+                    {
+                        <div class="position-relative">
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="CopyLink">
+                                <i class="oi oi-share-box"></i> Share
+                            </button>
+                            @if (isLinkCopied)
+                            {
+                                <div class="position-absolute bottom-150 start-50 translate-middle-x bg-success text-white p-2 rounded mt-2"
+                                    style="z-index: 1000;">
+                                    Copied!
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -45,6 +81,27 @@
 </div>
 
 @code {
-    [Parameter]
-    public Template Item { get; set; } = new();
+    [Parameter] public Template Item { get; set; } = new();
+
+    [Parameter] public bool mySpace { get; set; } = false;
+
+    private bool isLinkCopied = false;
+
+    private async Task CopyLink()
+    {
+        string linkToCopy = $"{Navigation.BaseUri}Form/{LinkService.EncryptId(Item.Id)}";
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", linkToCopy);
+            isLinkCopied = true;
+            StateHasChanged();
+            await Task.Delay(400);
+            isLinkCopied = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to copy link: {ex.Message}");
+        }
+    }
 }

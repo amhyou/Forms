@@ -153,6 +153,8 @@
 
         if (newForm.Id == default)
         {
+            var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+            newForm.AuthorId = userId;
             _db.Forms.Add(newForm);
         }
         else

@@ -4,7 +4,22 @@
 @inject ApplicationDbContext _db
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<ControlForm templateForm="templateForm" newForm="filledForm" isAuthenticated="isAuthenticated" />
+@if (!isAuthenticated)
+{
+    <center>
+        <h2>Need to <a href="/Account/Login">login</a> first</h2>
+    </center>
+}
+else if (userAuthorized)
+{
+    <ControlForm templateForm="templateForm" newForm="filledForm" isAuthenticated="isAuthenticated" />
+}
+else
+{
+    <center>
+        <h2>You are not authorized to see this form</h2>
+    </center>
+}
 
 @code {
     [Parameter] public string? HashId { get; set; }

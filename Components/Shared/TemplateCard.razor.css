@@ -39,3 +39,14 @@
 .card:hover {
     cursor: pointer;
 }
+
+
+.card-link-wrapper button {
+    pointer-events: auto;
+}
+
+.card-link-wrapper {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}

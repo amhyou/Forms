@@ -103,11 +103,7 @@
     private async Task HandleSearch(EventArgs e)
     {
         var searchQuery = await JS.InvokeAsync<string>("getInputValue", inputElement);
-
-        if (!string.IsNullOrWhiteSpace(searchQuery))
-        {
-            Navigation.NavigateTo($"/?q={searchQuery}");
-        }
+        Navigation.NavigateTo($"/?q={searchQuery}");
     }
 
     private void NavigateToMySpace()

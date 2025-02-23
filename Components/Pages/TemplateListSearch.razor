@@ -23,9 +23,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-
-        Console.WriteLine(searchQuery);
-
-        templateList = await _db.Templates.OrderByDescending(e => e.CreatedAt).ToListAsync();
+        // templateList = await _db.Templates.OrderByDescending(e => e.CreatedAt).ToListAsync();
+        templateList = await _db.Templates
+        .OrderByDescending(e => e.Likes.Count)
+        .ThenByDescending(e => e.CreatedAt)
+        .ToListAsync();
     }
 }

@@ -10,9 +10,17 @@
         {
             <ControlTemplate newTemplate="newTemplate" />
         }
+        else
+        {
+            <center>
+                <h2>You are not authorized to see this form</h2>
+            </center>
+        }
     </Authorized>
     <NotAuthorized>
-        <h1>Need to authentify first</h1>
+        <center>
+            <h2>Need to <a href="/Account/Login">login</a> first</h2>
+        </center>
     </NotAuthorized>
 </AuthorizeView>
 
