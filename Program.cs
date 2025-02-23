@@ -27,7 +27,7 @@ builder.Services.AddAuthentication(options =>
    {
        microsoftOptions.ClientId = builder.Configuration.GetValue<string>("AzureAd:ClientId")!;
        microsoftOptions.ClientSecret = builder.Configuration.GetValue<string>("AzureAd:ClientSecret")!;
-       microsoftOptions.CallbackPath = "/signin-microsoft";
+       microsoftOptions.CallbackPath = "https://forms.amhyou.com/signin-microsoft";
    })
 //    .AddTwitter(twitterOptions =>
 //     {
