@@ -5,6 +5,7 @@ using forms.Components;
 using forms.Components.Account;
 using forms.Data;
 using forms.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
@@ -28,6 +35,7 @@ builder.Services.AddAuthentication(options =>
        microsoftOptions.ClientId = builder.Configuration.GetValue<string>("AzureAd:ClientId")!;
        microsoftOptions.ClientSecret = builder.Configuration.GetValue<string>("AzureAd:ClientSecret")!;
        microsoftOptions.CallbackPath = "/signin-microsoft";
+
    })
 //    .AddTwitter(twitterOptions =>
 //     {
@@ -79,6 +87,8 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.UseForwardedHeaders();
 
 app.UseHttpsRedirection();
 
