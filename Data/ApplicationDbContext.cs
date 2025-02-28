@@ -81,7 +81,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .IsRequired();
             });
 
-            // Comment (One-to-Many with Topic and ApplicationUser)
+            // Template (One-to-Many with Topic and ApplicationUser)
+            // Template (Many-to-Many with Tags)
+            // Template (Many-to-Many with ApplicationUser : Like, AllowedUsers)
             builder.Entity<Template>(template =>
             {
                   template.HasOne(f => f.Creator)

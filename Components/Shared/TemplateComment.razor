@@ -83,7 +83,7 @@
         {
             templateForm.Comments.Add(newComment);
             await _db.SaveChangesAsync();
-            await CommentService.AddComment(newComment);
+            CommentService.AddComment(newComment);
             newCommentText = string.Empty;
 
             var _dbRedis = RedisService.GetDatabase();

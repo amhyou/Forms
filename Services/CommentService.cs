@@ -1,22 +1,21 @@
 using forms.Models;
 using Microsoft.AspNetCore.SignalR;
-using forms.Hubs;
 
 namespace forms.Services;
 
 public class CommentService
 {
-    private readonly IHubContext<CommentHub> _hubContext;
+    private readonly IHubContext<Hub> _hubContext;
     public event Action<Comment>? OnCommentAdded;
 
-    public CommentService(IHubContext<CommentHub> hubContext)
+    public CommentService(IHubContext<Hub> hubContext)
     {
         _hubContext = hubContext;
     }
 
-    public async Task AddComment(Comment newComment)
+    public void AddComment(Comment newComment)
     {
-        await _hubContext.Clients.Group(newComment.TemplateId.ToString()).SendAsync("SendComment", newComment);
+        _hubContext.Clients.Group(newComment.TemplateId.ToString());
         OnCommentAdded?.Invoke(newComment);
     }
 }
