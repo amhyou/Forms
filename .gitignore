@@ -3,6 +3,11 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+# Ignore .gitea directory
+.gitea/
+
+# Ignore all appsettings files
+appsettings*
 
 # dotenv files
 .env
