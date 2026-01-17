@@ -1,0 +1,18 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0
+
+WORKDIR /app
+
+# Install EF Core CLI
+RUN dotnet tool install --global dotnet-ef
+
+# Make sure dotnet tools are in PATH
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+COPY . .
+
+RUN dotnet restore
+RUN dotnet build
+
+RUN apt-get update && apt-get install -y postgresql-client
+
+ENTRYPOINT ["dotnet", "ef"]
